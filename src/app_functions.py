@@ -814,7 +814,8 @@ class Game(Optimizer):
             b'\x03': "Balanced",
             b'\x04': "HD",
             b'\x05': "HDR",
-            b'\x06': "Ultra HD"
+            b'\x06': "Ultra HD",
+            b'\x07': "Extreme HDR"
         }
         return graphics_setting_dict.get(graphics_setting_hex, None)
 
@@ -922,7 +923,8 @@ class Game(Optimizer):
             "Balanced": b'\x03',
             "HD": b'\x04',
             "HDR": b'\x05',
-            "Ultra HD": b'\x06'
+            "Ultra HD": b'\x06',
+            "Extreme HDR": b'\x07'
         }
 
         graphics_setting = graphics_setting_dict.get(quality, b'\x02')
