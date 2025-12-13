@@ -184,6 +184,7 @@ class GFX(QObject):
             self.ui.hd_graphics_btn,
             self.ui.hdr_graphics_btn,
             self.ui.ultrahd_graphics_btn,
+            self.ui.uhd_graphics_btn,
         ]
         self.graphics_value = self.app.get_graphics_setting()
 
@@ -256,7 +257,8 @@ class GFX(QObject):
             self.ui.balanced_graphics_btn,
             self.ui.hd_graphics_btn,
             self.ui.hdr_graphics_btn,
-            self.ui.ultrahd_graphics_btn
+            self.ui.ultrahd_graphics_btn,
+            self.ui.uhd_graphics_btn
         ]
         for button in buttons:
             button.clicked.connect(lambda checked, btn=button: self.check_button_selected(buttons, btn))
@@ -297,6 +299,7 @@ class GFX(QObject):
             self.ui.hd_graphics_btn,
             self.ui.hdr_graphics_btn,
             self.ui.ultrahd_graphics_btn,
+            self.ui.uhd_graphics_btn,
             self.ui.low_fps_btn,
             self.ui.medium_fps_btn,
             self.ui.high_fps_btn,

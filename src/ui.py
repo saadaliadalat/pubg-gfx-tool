@@ -267,7 +267,7 @@ class Ui_MainWindow(object):
 
         self.uhd_graphics_btn = QPushButton(self.layoutWidget)
         self.uhd_graphics_btn.setObjectName(u"uhd_graphics_btn")
-        self.uhd_graphics_btn.setEnabled(False)
+        self.uhd_graphics_btn.setEnabled(True)
         sizePolicy.setHeightForWidth(self.uhd_graphics_btn.sizePolicy().hasHeightForWidth())
         self.uhd_graphics_btn.setSizePolicy(sizePolicy)
         self.uhd_graphics_btn.setMinimumSize(QSize(141, 41))
@@ -936,18 +936,12 @@ class Ui_MainWindow(object):
             self.pubgchoose_label.setText(
                     QCoreApplication.translate("MainWindow", u"Select the game version you need to use.", None))
             self.graphics_label.setText(QCoreApplication.translate("MainWindow", u"Graphics", None))
-            self.smooth_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"Smooth", None))
-            self.balanced_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"Balanced", None))
-            self.hd_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"HD", None))
-            self.hdr_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"HDR", None))
-            self.ultrahd_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"Ultra HD", None))
-            # if QT_CONFIG(tooltip)
-            self.uhd_graphics_btn.setToolTip(
-                    QCoreApplication.translate("MainWindow", u"<html><head/><body><p>UHD graphics feature\n"
-                                                             "                                                not yet available in the game.</p></body></html>\n"
-                                                             "                                            ", None))
-            # endif // QT_CONFIG(tooltip)
-            self.uhd_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"Extreme HDR", None))
+            self.smooth_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"Super Smooth", None))
+            self.balanced_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"Smooth", None))
+            self.hd_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"Balanced", None))
+            self.hdr_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"HD", None))
+            self.ultrahd_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"HDR", None))
+            self.uhd_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"Ultra HD", None))
             self.fps_label.setText(QCoreApplication.translate("MainWindow", u"Frame Rate", None))
             self.low_fps_btn.setText(QCoreApplication.translate("MainWindow", u"Low", None))
             self.medium_fps_btn.setText(QCoreApplication.translate("MainWindow", u"Medium", None))
