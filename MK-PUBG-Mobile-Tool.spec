@@ -14,19 +14,28 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 block_cipher = None
 >>>>>>> f0898754ec718c530178568b743dbb7281b5b8b8
 
+# Collect all submodules for problematic packages
+ping3_datas, ping3_binaries, ping3_hiddenimports = collect_all('ping3')
+adbutils_datas, adbutils_binaries, adbutils_hiddenimports = collect_all('adbutils')
+wmi_datas, wmi_binaries, wmi_hiddenimports = collect_all('wmi')
+
 a = Analysis(
     ['main.py'],
     pathex=[],
+<<<<<<< HEAD
 <<<<<<< HEAD
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
 =======
     binaries=[],
+=======
+    binaries=ping3_binaries + adbutils_binaries + wmi_binaries,
+>>>>>>> ec40b436f206ef5eacdc379d4263a2d7fb91ec70
     datas=[
         ('assets', 'assets'),
         ('images', 'images'),
-    ],
+    ] + ping3_datas + adbutils_datas + wmi_datas,
     hiddenimports=[
         'adbutils',
         'GPUtil',
@@ -45,8 +54,12 @@ a = Analysis(
         'PyQt5.QtCore',
         'PyQt5.QtGui',
         'PyQt5.QtWidgets',
+<<<<<<< HEAD
     ],
 >>>>>>> f0898754ec718c530178568b743dbb7281b5b8b8
+=======
+    ] + ping3_hiddenimports + adbutils_hiddenimports + wmi_hiddenimports,
+>>>>>>> ec40b436f206ef5eacdc379d4263a2d7fb91ec70
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -63,11 +76,6 @@ pyz = PYZ(a.pure)
     noarchive=False,
 )
 
-# Collect all submodules
-a.datas += collect_all('ping3')[0]
-a.datas += collect_all('adbutils')[0]
-a.datas += collect_all('wmi')[0]
-
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 >>>>>>> f0898754ec718c530178568b743dbb7281b5b8b8
 
@@ -80,7 +88,6 @@ exe = EXE(
     a.zipfiles,
 >>>>>>> f0898754ec718c530178568b743dbb7281b5b8b8
     a.datas,
-    [],
     name='MK-PUBG-Mobile-Tool',
     debug=False,
     bootloader_ignore_signals=False,
@@ -95,8 +102,12 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 <<<<<<< HEAD
+<<<<<<< HEAD
     icon=['assets\\icons\\logo.ico'],
 =======
     icon='assets\\icons\\logo.ico',
 >>>>>>> f0898754ec718c530178568b743dbb7281b5b8b8
+=======
+    icon='assets/icons/logo.ico'
+>>>>>>> ec40b436f206ef5eacdc379d4263a2d7fb91ec70
 )
