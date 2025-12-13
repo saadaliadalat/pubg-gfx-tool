@@ -19,7 +19,7 @@ The tool has been updated to support the new **Super Smooth** graphics setting i
 2. **Python 3.7+** installed
 3. **Git** (optional, for cloning)
 
-### Method 1: Quick Build (Recommended)
+### Method 1: Simple Build (Recommended - Uses Spec File)
 
 1. Open Command Prompt or PowerShell as Administrator
 2. Navigate to the project directory:
@@ -27,47 +27,41 @@ The tool has been updated to support the new **Super Smooth** graphics setting i
    cd path\to\pubg-gfx-tool
    ```
 
-3. Run the build script:
+3. Run the simple build script:
    ```cmd
-   build.bat
+   build_simple.bat
    ```
 
 4. The executable will be created in the `dist` folder:
    - Location: `dist\MK-PUBG-Mobile-Tool.exe`
 
-### Method 2: Manual Build
+**This method is most reliable!** It uses a PyInstaller spec file that properly includes all dependencies.
+
+### Method 2: Quick Build (Alternative)
+
+1. Navigate to project directory
+2. Run:
+   ```cmd
+   build.bat
+   ```
+
+3. Check `dist\MK-PUBG-Mobile-Tool.exe`
+
+### Method 3: Using Spec File (Manual)
 
 1. Install dependencies:
    ```cmd
    pip install -r requirements.txt
    ```
 
-2. Run PyInstaller:
+2. Run PyInstaller with spec file:
    ```cmd
-   pyinstaller --noconfirm --onefile --windowed ^
-     --icon=assets/icons/logo.ico ^
-     --name=MK-PUBG-Mobile-Tool ^
-     --add-data="assets;assets" ^
-     --add-data="images;images" ^
-     --hidden-import=adbutils ^
-     --hidden-import=GPUtil ^
-     --hidden-import=ping3 ^
-     --hidden-import=psutil ^
-     --hidden-import=pywintypes ^
-     --hidden-import=win32com.client ^
-     --hidden-import=win32api ^
-     --hidden-import=winshell ^
-     --hidden-import=wmi ^
-     --hidden-import=xmltodict ^
-     --hidden-import=PyQt5 ^
-     --collect-all=adbutils ^
-     --collect-all=PyQt5 ^
-     main.py
+   pyinstaller MK-PUBG-Mobile-Tool.spec
    ```
 
 3. Find the executable in `dist\MK-PUBG-Mobile-Tool.exe`
 
-### Method 3: Using Python Script
+### Method 4: Using Python Script
 
 1. Install dependencies:
    ```cmd
@@ -107,7 +101,24 @@ pip install -r requirements.txt --upgrade
 - Install Microsoft Visual C++ Redistributable
 - Install all Windows updates
 
-### Runtime Errors
+### Runtime Errors (When Running EXE)
+
+**"ModuleNotFoundError: No module named 'ping3'"** or similar
+- This means PyInstaller didn't package the module correctly
+- **Solution:** Use `build_simple.bat` which uses the spec file
+- Or delete `build` and `dist` folders and rebuild:
+  ```cmd
+  rmdir /s /q build dist
+  build_simple.bat
+  ```
+
+**"Failed to execute script"**
+- Run from Command Prompt to see the actual error:
+  ```cmd
+  cd dist
+  MK-PUBG-Mobile-Tool.exe
+  ```
+- Check `error.log` file for details
 
 **"GameLoop not found"**
 - Install Gameloop emulator
@@ -121,18 +132,20 @@ pip install -r requirements.txt --upgrade
 
 ```
 pubg-gfx-tool/
-├── main.py                 # Main entry point
-├── requirements.txt        # Python dependencies
-├── build.bat              # Windows build script
-├── build_exe.py           # Python build script
-├── BUILD_INSTRUCTIONS.md  # This file
+├── main.py                        # Main entry point
+├── requirements.txt               # Python dependencies
+├── build.bat                      # Windows build script (CLI method)
+├── build_simple.bat              # Simple build script (RECOMMENDED)
+├── build_exe.py                  # Python build script
+├── MK-PUBG-Mobile-Tool.spec      # PyInstaller spec file
+├── BUILD_INSTRUCTIONS.md         # This file
 ├── src/
-│   ├── app_functions.py   # Core functionality (UPDATED)
-│   ├── gfx.py            # Graphics UI logic (UPDATED)
-│   ├── ui.py             # UI definitions (UPDATED)
+│   ├── app_functions.py          # Core functionality (UPDATED)
+│   ├── gfx.py                    # Graphics UI logic (UPDATED)
+│   ├── ui.py                     # UI definitions (UPDATED)
 │   └── ...
-├── assets/               # Icons and resources
-└── images/              # Screenshots
+├── assets/                        # Icons and resources
+└── images/                        # Screenshots
 ```
 
 ## What Was Changed

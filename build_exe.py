@@ -28,8 +28,13 @@ pyinstaller_cmd = [
     '--hidden-import=wmi',
     '--hidden-import=xmltodict',
     '--hidden-import=PyQt5',
+    '--hidden-import=pythoncom',
+    '--hidden-import=win32timezone',
     '--collect-all=adbutils',
     '--collect-all=PyQt5',
+    '--collect-all=ping3',
+    '--collect-all=wmi',
+    '--copy-metadata=ping3',
     'main.py'
 ]
 
