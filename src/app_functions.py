@@ -333,21 +333,21 @@ class Optimizer(Registry):
         """
         # List of processes to be killed
         processes_to_kill = [
-            'aow_exe.exe',
-            'AndroidEmulatorEn.exe',
-            'AndroidEmulator.exe',
-            'AndroidEmulatorEx.exe',
-            'TBSWebRenderer.exe',
-            'syzs_dl_svr.exe',
-            'AppMarket.exe',
-            'QMEmulatorService.exe',
-            'RuntimeBroker.exe',
-            'GameLoader.exe',
-            'TSettingCenter.exe',
-            'Auxillary.exe',
-            'TP3Helper.exe',
-            'tp3helper.dat',
-            'GameDownload.exe'
+            'aow_exe.exe',  # Process 1
+            'AndroidEmulatorEn.exe',  # Process 2
+            'AndroidEmulator.exe',  # Process 3
+            'AndroidEmulatorEx.exe',  # Process 4
+            'TBSWebRenderer.exe',  # Process 5
+            'syzs_dl_svr.exe',  # Process 6
+            'AppMarket.exe',  # Process 7
+            'QMEmulatorService.exe',  # Process 8
+            'RuntimeBroker.exe',  # Process 9
+            'GameLoader.exe',  # Process 10
+            'TSettingCenter.exe',  # Process 11
+            'Auxillary.exe',  # Process 12
+            'TP3Helper.exe',  # Process 13
+            'tp3helper.dat',  # Process 14
+            'GameDownload.exe'  # Process 15
         ]
 
         processes_killed = 0
@@ -365,14 +365,16 @@ class Optimizer(Registry):
         """
         Change the DNS servers for all network adapters.
         """
-        pythoncom.CoInitialize()
+        pythoncom.CoInitialize()  # Initialize the COM library
 
-        wmi_api = wmi.WMI()
+        wmi_api = wmi.WMI()  # Create a WMI API object
 
+        # Retrieve all network adapters
         adapters = wmi_api.Win32_NetworkAdapterConfiguration(IPEnabled=True)
 
         dns_changed_status = all(adapter.SetDNSServerSearchOrder(dns_servers)[0] == 0 for adapter in adapters)
 
+        # Flush DNS cache
         subprocess.run(['ipconfig', '/flushdns'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
 
         return dns_changed_status
@@ -380,6 +382,9 @@ class Optimizer(Registry):
     def ipad_layout_settings(self, reset=False):
         """
         Modify the layout of the XML file based on the edited values.
+
+        Parameters:
+            reset (bool): If True, the XML file will be reset to its original state by copying the backup file. If False, the layout will be modified based on the edited values.
         """
         appdata_folder = os.getenv('APPDATA')
         keymap_folder = os.path.join(appdata_folder, 'AndroidTbox')
@@ -387,6 +392,10 @@ class Optimizer(Registry):
         backup_file = os.path.join(keymap_folder, 'TVM_100.xml.mkbackup')
 
         def set_keymap_layout():
+            """
+            Modify the layout of the XML file based on the edited values.
+            """
+
             def update_xml(ipad_keymap):
                 with open(original_file, 'r', encoding='utf-8') as file:
                     xml_code = file.read()
@@ -429,6 +438,7 @@ class Optimizer(Registry):
                                                             zz or key_mapping_ex.findall(
                                                         ".//DriveKey") or key_mapping_ex.findall(
                                                         f'.//SwitchOperation[@EnableSwitch="{switch_name}"]'))):
+                                                        # if main_value is not None:
                                                         if button_name == "Click with Scroll Wheel" and switch_name == "Backpage":
                                                             key_mapping_ex.set('Click_X', str(float(x) + 0.1))
                                                             key_mapping_ex.set('Click_Y', str(y))
@@ -460,15 +470,16 @@ class Optimizer(Registry):
                                                         f'.//SwitchOperation[@EnableSwitch="{switch_name}"]'):
                                                     point_element.set('Point_X', str(x))
                                                     point_element.set('Point_Y', str(y))
+                # print(ET.tostring(root, encoding='utf-8').decode('utf-8')[6:-7])
                 with open(original_file, 'w', encoding='utf-8') as file:
                     file.write(ET.tostring(root, encoding='utf-8').decode('utf-8')[6:-7])
 
             ipad_keymap_values = {
                 "Smart 720P": {
-                    "B": {"Reload": [("0.537234", "0.880567"), ("0.406535", "0.880567")]},
-                    "3": {"Jump": ("0.613222", "0.880567"), "GetOutCar": ("0.613222", "0.880567")},
+                    "B": {"Reload": [("0.537234", "0.880567"), ("0.406535", "0.880567")]},  # Main
+                    "3": {"Jump": ("0.613222", "0.880567"), "GetOutCar": ("0.613222", "0.880567")},  # Main
                     "F3": {"SetUp": [("0.768997", "0.163968"), ("0.896657", "0.270243")]},
-                    "F2": {"SetUp": [("0.781155", "0.144737"), ("0.960486", "0.270243")]},
+                    "F2": {"SetUp": [("0.781155", "0.144737"), ("0.960486", "0.270243")]},  # Main 2 >> 1
                     "Space": {"Jump": ("0.962006", "0.762146"), "Climb": ("0.962006", "0.762146"),
                               "Whistle": [("0.911094", "0.660931"), ("0.063070", "0.747976")],
                               "DriveMode1|DriveSpeed": ("0.063070", "0.747976"),
@@ -477,17 +488,17 @@ class Optimizer(Registry):
                     "Shift": {"DriveMode1|DriveSpeed": ("0.076748", "0.555668"),
                               "DriveMode1|DriveSpeedPress": ("0.076748", "0.555668")},
                     "Right Click": {"Sniper": ("0.962006", "0.638664"), "Sniper2": ("0.962006", "0.638664"),
-                                    "Reload": ("0.962006", "0.638664")},
-                    "Z": {"Fall": ("0.942249", "0.949393"), "CancelFall": ("0.942249", "0.949393")},
+                                    "Reload": ("0.962006", "0.638664")},  # Main
+                    "Z": {"Fall": ("0.942249", "0.949393"), "CancelFall": ("0.942249", "0.949393")},  # Main
                     "E": {"Sideways": ("0.221884", "0.522267"), "SidewaysCancel": ("0.221884", "0.522267"),
-                          "Moto": ("0.806991", "0.637652"), "Moto2": ("0.806991", "0.637652")},
+                          "Moto": ("0.806991", "0.637652"), "Moto2": ("0.806991", "0.637652")},  # Main
                     "Q": {"Sideways": ("0.141337", "0.520243"), "SidewaysCancel": ("0.141337", "0.520243"),
                           "Moto": ("0.713526", "0.635628"), "Moto2": ("0.713526", "0.635628")},
                     "Y": {"SetUp": [("0.794833", "0.161943"), ("0.753040", "0.161943"), ("0.844985", "0.157895")]},
                     "T": {"SetUp": [("0.780395", "0.092105"), ("0.732523", "0.092105"), ("0.847264", "0.097166")]},
                     "Alt": {"Eye": [("0.776596", "0.232794")]},
                     "Drive": {"DriveMode1": (("0.673252", "0.765182"), ("0.834347", "0.765182"),
-                                             ("0.164894", "0.644737"), ("0.164894", "0.826923"))},
+                                             ("0.164894", "0.644737"), ("0.164894", "0.826923"))},  # ADWS
                     "F": {"Pickup|NineBlock": ("0.144377", "0.683198"), "Pickup|SixBlock": ("0.341945", "0.682186"),
                           "Pickup|XBtn": ("0.319909", "0.281377"), "Pickup": ("0.658055", "0.281377"),
                           "Pickup|SkyBoxFlag|XBtn": ("0.144377", "0.683198")},
@@ -513,10 +524,10 @@ class Optimizer(Registry):
                     "0": {"GrenadeArrowUp": [("0.863750", "0.926667"), ("0.202847", "0.863750")]},
                 },
                 "Smart 1080P": {
-                    "B": {"Reload": [("0.542969", "0.910751"), ("0.437500", "0.910751")]},
-                    "3": {"Jump": ("0.584347", "0.913793"), "GetOutCar": ("0.584347", "0.913793")},
+                    "B": {"Reload": [("0.542969", "0.910751"), ("0.437500", "0.910751")]},  # Main
+                    "3": {"Jump": ("0.584347", "0.913793"), "GetOutCar": ("0.584347", "0.913793")},  # Main
                     "F3": {"SetUp": [("0.838146", "0.100406"), ("0.924012", "0.193712")]},
-                    "F2": {"SetUp": [("0.838146", "0.100406"), ("0.971884", "0.193712")]},
+                    "F2": {"SetUp": [("0.838146", "0.100406"), ("0.971884", "0.193712")]},  # Main 2 >> 1
                     "Space": {"Jump": ("0.969605", "0.834686"), "Climb": ("0.969605", "0.834686"),
                               "Whistle": [("0.934650", "0.764706"), ("0.049392", "0.823529")],
                               "DriveMode1|DriveSpeed": ("0.049392", "0.823529"),
@@ -525,17 +536,17 @@ class Optimizer(Registry):
                     "Shift": {"DriveMode1|DriveSpeed": ("0.053951", "0.683570"),
                               "DriveMode1|DriveSpeedPress": ("0.053951", "0.683570")},
                     "Right Click": {"Sniper": ("0.971125", "0.746450"), "Sniper2": ("0.971125", "0.746450"),
-                                    "Reload": ("0.971125", "0.746450")},
-                    "Z": {"Fall": ("0.961246", "0.967546"), "CancelFall": ("0.961246", "0.967546")},
+                                    "Reload": ("0.971125", "0.746450")},  # Main
+                    "Z": {"Fall": ("0.961246", "0.967546"), "CancelFall": ("0.961246", "0.967546")},  # Main
                     "E": {"Sideways": ("0.155775", "0.658215"), "SidewaysCancel": ("0.155775", "0.658215"),
-                          "Moto": ("0.857903", "0.738337"), "Moto2": ("0.857903", "0.738337")},
+                          "Moto": ("0.857903", "0.738337"), "Moto2": ("0.857903", "0.738337")},  # Main
                     "Q": {"Sideways": ("0.101064", "0.656187"), "SidewaysCancel": ("0.101064", "0.656187"),
                           "Moto": ("0.791793", "0.736308"), "Moto2": ("0.791793", "0.736308")},
                     "Y": {"SetUp": [("0.852584", "0.118661"), ("0.823708", "0.118661"), ("0.892097", "0.108519")]},
                     "T": {"SetUp": [("0.841185", "0.064909"), ("0.809271", "0.064909"), ("0.888298", "0.073022")]},
                     "Alt": {"Eye": [("0.840426", "0.166329")]},
                     "Drive": {"DriveMode1": (("0.764438", "0.836714"), ("0.881459", "0.836714"),
-                                             ("0.116261", "0.752535"), ("0.116261", "0.883367"))},
+                                             ("0.116261", "0.752535"), ("0.116261", "0.883367"))},  # ADWS
                     "F": {"Pickup|NineBlock": ("0.353906", "0.763889"), "Pickup|SixBlock": ("0.482031", "0.767206"),
                           "Pickup|XBtn": ("0.467187", "0.199393"), "Pickup": ("0.721094", "0.199393"),
                           "Pickup|SkyBoxFlag|XBtn": ("0.353906", "0.763889")},
@@ -564,10 +575,10 @@ class Optimizer(Registry):
                     "0": {"GrenadeArrowUp": [("0.894750", "0.936667"), ("0.202847", "0.894750")]},
                 },
                 "Smart 2K": {
-                    "B": {"Reload": [("0.542969", "0.910751"), ("0.437500", "0.910751")]},
-                    "3": {"Jump": ("0.584347", "0.913793"), "GetOutCar": ("0.584347", "0.913793")},
+                    "B": {"Reload": [("0.542969", "0.910751"), ("0.437500", "0.910751")]},  # Main
+                    "3": {"Jump": ("0.584347", "0.913793"), "GetOutCar": ("0.584347", "0.913793")},  # Main
                     "F3": {"SetUp": [("0.838146", "0.100406"), ("0.924012", "0.193712")]},
-                    "F2": {"SetUp": [("0.838146", "0.100406"), ("0.971884", "0.193712")]},
+                    "F2": {"SetUp": [("0.838146", "0.100406"), ("0.971884", "0.193712")]},  # Main 2 >> 1
                     "Space": {"Jump": ("0.969605", "0.834686"), "Climb": ("0.969605", "0.834686"),
                               "Whistle": [("0.934650", "0.764706"), ("0.049392", "0.823529")],
                               "DriveMode1|DriveSpeed": ("0.049392", "0.823529"),
@@ -576,17 +587,17 @@ class Optimizer(Registry):
                     "Shift": {"DriveMode1|DriveSpeed": ("0.053951", "0.683570"),
                               "DriveMode1|DriveSpeedPress": ("0.053951", "0.683570")},
                     "Right Click": {"Sniper": ("0.971125", "0.746450"), "Sniper2": ("0.971125", "0.746450"),
-                                    "Reload": ("0.971125", "0.746450")},
-                    "Z": {"Fall": ("0.961246", "0.967546"), "CancelFall": ("0.961246", "0.967546")},
+                                    "Reload": ("0.971125", "0.746450")},  # Main
+                    "Z": {"Fall": ("0.961246", "0.967546"), "CancelFall": ("0.961246", "0.967546")},  # Main
                     "E": {"Sideways": ("0.155775", "0.658215"), "SidewaysCancel": ("0.155775", "0.658215"),
-                          "Moto": ("0.857903", "0.738337"), "Moto2": ("0.857903", "0.738337")},
+                          "Moto": ("0.857903", "0.738337"), "Moto2": ("0.857903", "0.738337")},  # Main
                     "Q": {"Sideways": ("0.101064", "0.656187"), "SidewaysCancel": ("0.101064", "0.656187"),
                           "Moto": ("0.791793", "0.736308"), "Moto2": ("0.791793", "0.736308")},
                     "Y": {"SetUp": [("0.852584", "0.118661"), ("0.823708", "0.118661"), ("0.892097", "0.108519")]},
                     "T": {"SetUp": [("0.841185", "0.064909"), ("0.809271", "0.064909"), ("0.888298", "0.073022")]},
                     "Alt": {"Eye": [("0.840426", "0.166329")]},
                     "Drive": {"DriveMode1": (("0.764438", "0.836714"), ("0.881459", "0.836714"),
-                                             ("0.116261", "0.752535"), ("0.116261", "0.883367"))},
+                                             ("0.116261", "0.752535"), ("0.116261", "0.883367"))},  # ADWS
                     "F": {"Pickup|NineBlock": ("0.353906", "0.763889"), "Pickup|SixBlock": ("0.482031", "0.767206"),
                           "Pickup|XBtn": ("0.467187", "0.199393"), "Pickup": ("0.721094", "0.199393"),
                           "Pickup|SkyBoxFlag|XBtn": ("0.353906", "0.763889")},
@@ -616,7 +627,9 @@ class Optimizer(Registry):
                 }
             }
 
+
             update_xml(ipad_keymap_values)
+
 
         if reset:
             shutil.copy2(backup_file, original_file)
@@ -625,6 +638,7 @@ class Optimizer(Registry):
             if not os.path.exists(backup_file):
                 shutil.copy2(original_file, backup_file)
             set_keymap_layout()
+
 
     def ipad_settings(self, width: int, height: int) -> None:
         """
@@ -751,7 +765,6 @@ class Game(Optimizer):
     def set_fps(self, val: str) -> None:
         """
         Updates the Active.sav file with the new FPS value.
-        ### ENHANCED WITH NEW TIERS ###
         """
         fps_mapping = {
             "Low": b"\x02",
@@ -760,8 +773,7 @@ class Game(Optimizer):
             "Ultra": b"\x05",
             "Extreme": b"\x06",
             "Extreme+": b"\x07",
-            "Ultra Extreme": b"\x08",
-            "Unlimited": b"\x09"  # NEW TIER
+            "Ultra Extreme": b"\x08"
         }
         fps_value = fps_mapping.get(val)
 
@@ -794,7 +806,6 @@ class Game(Optimizer):
     def get_graphics_setting(self):
         """
         Gets the graphics setting name from the hex value.
-        ### ENHANCED WITH NEW TIERS ###
         """
         graphics_setting_hex = self.read_hex("BattleRenderQuality")
         graphics_setting_dict = {
@@ -802,17 +813,13 @@ class Game(Optimizer):
             b'\x02': "Balanced",
             b'\x03': "HD",
             b'\x04': "HDR",
-            b'\x05': "Ultra HD",
-            b'\x06': "Extreme HDR",    # NEW UNLOCKED
-            b'\x07': "Ultra HDR+",     # NEW CUSTOM
-            b'\x08': "God Mode"        # NEW MAXIMUM
+            b'\x05': "Ultra HD"
         }
         return graphics_setting_dict.get(graphics_setting_hex, None)
 
     def get_fps(self):
         """
         Gets the FPS value from the Active.sav file.
-        ### ENHANCED WITH NEW TIER ###
         """
         fps_hex = self.read_hex("BattleFPS")
         fps_dict = {
@@ -823,7 +830,6 @@ class Game(Optimizer):
             b"\x06": "Extreme",
             b"\x07": "Extreme+",
             b"\x08": "Ultra Extreme",
-            b"\x09": "Unlimited",  # NEW
         }
         return fps_dict.get(fps_hex, None)
 
@@ -847,14 +853,20 @@ class Game(Optimizer):
 
         return shadow_name
 
+    # Todo: Make This Function Working
     def set_shadow(self, value):
         """
-        Sets the shadow value in the UserCustom.ini file.
+        Sets the shadow value in the Active.sav file.
+        :param value: Shadow value to set ("ON" or "OFF")
+        :return: True if successful, False otherwise
         """
+
         shadow_value = {"ON": 48, "OFF": 49}.get(value)
         if shadow_value is None:
             return False
-        
+        shadow_values = {"r.UserShadowSwitch": "1", "r.ShadowQuality": "1", "r.Mobile.DynamicObjectShadow": "1",
+                         "r.Shadow.MaxCSMResolution": "1", "r.Shadow.DistanceScale": "1",
+                         "r.Shadow.CSM.MaxMobileCascades": "1"}
         lines = []
         with open(self.resource_path(r"assets\user.mkvip"), "r") as file:
             for line in file:
@@ -872,6 +884,7 @@ class Game(Optimizer):
     def get_graphics_style(self):
         """
         Gets the graphics style name from the hex value.
+        :return: name of the graphics style
         """
         battle_style_hex = self.read_hex("BattleRenderStyle")
         battle_style_dict = {
@@ -882,7 +895,7 @@ class Game(Optimizer):
             b'\x06': "Movie"
         }
 
-        return battle_style_dict.get(battle_style_hex, "Not Found")
+        return battle_style_dict.get(battle_style_hex, "Not Found, It Will Be Added In The Next Update")
 
     def set_graphics_style(self, style):
         """
@@ -895,24 +908,19 @@ class Game(Optimizer):
             "Soft": b'\x04',
             "Movie": b'\x06'
         }
-        battle_style = battle_style_dict.get(style)
-        if battle_style:
-            self.change_graphics_file("BattleRenderStyle", battle_style)
+        battle_style = battle_style_dict.get(style, "Not Found, It Will Be Added In The Next Update")
+        self.change_graphics_file("BattleRenderStyle", battle_style)
 
     def set_graphics_quality(self, quality):
         """
         Sets the graphics quality for different game modes.
-        ### ENHANCED WITH NEW TIERS ###
         """
         graphics_setting_dict = {
             "Smooth": b'\x01',
             "Balanced": b'\x02',
             "HD": b'\x03',
             "HDR": b'\x04',
-            "Ultra HD": b'\x05',
-            "Extreme HDR": b'\x06',    # NEW UNLOCKED
-            "Ultra HDR+": b'\x07',     # NEW CUSTOM
-            "God Mode": b'\x08'        # NEW MAXIMUM
+            "Ultra HD": b'\x05'
         }
 
         graphics_setting = graphics_setting_dict.get(quality, b'\x01')
@@ -921,151 +929,6 @@ class Game(Optimizer):
         graphics_files = ["ArtQuality", "LobbyRenderQuality", "BattleRenderQuality"]
         for value in graphics_files:
             self.change_graphics_file(value, graphics_setting)
-
-    def generate_advanced_config(self, preset="God Mode"):
-        """
-        ### NEW FUNCTION: Generate advanced UserCustom.ini with all settings ###
-        Creates a complete config file with enhanced graphics settings
-        """
-        presets = {
-            "God Mode": {
-                "aa": "444C",           # 16x MSAA
-                "shadow": "444E",       # Extreme shadows
-                "texture": "444C",      # Max textures
-                "view": "444D",         # Extreme view distance
-                "post": "444D",         # Extreme post-processing
-                "bloom": "444B",        # Ultra bloom
-                "light": "444A",        # High light shafts
-                "ssao": "444B",         # High SSAO
-                "aniso": "444C",        # 16x anisotropic
-            },
-            "Competitive": {
-                "aa": "444A",           # 4x MSAA
-                "shadow": "444A",       # Medium shadows
-                "texture": "444A",      # High textures
-                "view": "444C",         # Ultra view distance
-                "post": "444A",         # High post-processing
-                "bloom": "4449",        # Low bloom
-                "light": "4448",        # Off light shafts
-                "ssao": "4449",         # Low SSAO
-                "aniso": "444B",        # 8x anisotropic
-            },
-            "Balanced": {
-                "aa": "444A",           # 4x MSAA
-                "shadow": "444B",       # High shadows
-                "texture": "444A",      # High textures
-                "view": "444A",         # High view distance
-                "post": "444A",         # High post-processing
-                "bloom": "444A",        # High bloom
-                "light": "4449",        # On light shafts
-                "ssao": "444A",         # Medium SSAO
-                "aniso": "444B",        # 8x anisotropic
-            }
-        }
-        
-        p = presets.get(preset, presets["God Mode"])
-        
-        config = f"""[BackUp DeviceProfile]
-+CVars=0B5734161B10151C3A16170D1C170D2A1A18151C3F181A0D160B44485749
-+CVars=0B572C0A1C0B2A11181D160E2A0E100D1A11{p['aa']}
-+CVars=0B572A11181D160E280C1815100D00{p['shadow']}
-+CVars=0B5734161B10151C3A16170D1C170D2A1A18151C3F181A0D160B{p['texture']}
-+CVars=0B572A0D180D101A341C0A1135363D3D100A0D18171A1C2A1A18151C{p['view']}
-+CVars=0B5734161B10151C313D2B{p['post']}
-+CVars=0B573B15161614280C1815100D00{p['bloom']}
-+CVars=0B5735101E110D2A11181F0D280C1815100D00{p['light']}
-+CVars=0B572C0A1C0B342A38382A1C0D0D10171E{p['ssao']}
-+CVars=0B5734161B10151C342A3838{p['aniso']}
-+CVars=0B572A0D180D101A341C0A1135363D3D100A0D18171A1C2A1A18151C44495741
-+CVars=1F161510181E1C5735363D3D100A0D18171A1C2A1A18151C4448
-+CVars=0B5729180B0D101A151C35363D3B10180A4449
-+CVars=0B573C14100D0D1C0B2A09180E172B180D1C2A1A18151C4448
-+CVars=0B573D1C0D18101534161D1C444B
-+CVars=0B5734180D1C0B101815280C1815100D00351C0F1C154448
-+CVars=0B572C0A1C0B280C1815100D002A1C0D0D10171E444B
-+CVars=0B5734161B10151C573D00171814101A361B131C1A0D2A11181D160E4448
-+CVars=0B573D1C090D11361F3F101C151D280C1815100D004449
-+CVars=0B572B1C1F0B181A0D101617280C1815100D004449
-+CVars=1F161510181E1C5734101735363D4449
-+CVars=0B572A0D0B1C181410171E57291616152A10031C444A4949
-+CVars=0B5734161B10151C370C143D00171814101A291610170D35101E110D0A4448
-+CVars=0B573E2D383657280C1815100D004449
-+CVars=0B57292C3B3E2F1C0B0A101617444C
-+CVars=0B572C0A1C0B313D2B2A1C0D0D10171E4448
-+CVars=0B5734161B10151C313D2B4449
-+CVars=0B5734161B10151C572A1A1C171C3A1615160B3F160B14180D4449
-+CVars=0B573B15161614280C1815100D004449
-+CVars=0B5735101E110D2A11181F0D280C1815100D004449
-+CVars=0B5734161B10151C572D16171C141809091C0B3F1015144449
-+CVars=0B5734161B10151C5738150E18000A2B1C0A16150F1C3D1C090D114449
-+CVars=0B572C0A1C0B342A38382A1C0D0D10171E4449
-+CVars=0B5734161B10151C342A38384448
-+CVars=0B573D1C1F180C150D3F1C180D0C0B1C5738170D10381510180A10171E4449
-+CVars=0B5734161B10151C2A101409151C2A11181D1C0B4449
-+CVars=0B572C0A1C0B2F0C151218172A1C0D0D10171E4449
-
-[UserCustom DeviceProfile]
-+CVars=0B572C0A1C0B280C1815100D002A1C0D0D10171E444A
-+CVars=0B572C0A1C0B2A11181D160E2A0E100D1A11{p['aa']}
-+CVars=0B572A11181D160E280C1815100D00{p['shadow']}
-+CVars=0B5734161B10151C3A16170D1C170D2A1A18151C3F181A0D160B{p['texture']}
-+CVars=0B572C0A1C0B2F0C151218172A1C0D0D10171E4449
-+CVars=0B5734161B10151C313D2B{p['post']}
-+CVars=0B5734161B10151C572A1A1C171C3A1615160B3F160B14180D444B5749
-+CVars=0B572F2B2A573F160B1A1C2A11181D10171E2B180D1C4454485749
-+CVars=0B5734161B10151C573C17181B151C29292B44495749
-+CVars=0B5734180D1C0B101815280C1815100D002A0C091C0B31101E1144485749
-+CVars=0B572A11181D160E573418013A2A342B1C0A16150C0D1016174448494B4D
-+CVars=0B572A1200380D14160A09111C0B1C44485749
-+CVars=3C171E10171C573E2A151C1C092D10141C2D11161D4449574949494C
-+CVars=0B573E2D383657280C1815100D004449
-+CVars=0B572C0A1C0B313D2B2A1C0D0D10171E444B
-+CVars=0B573B15161614280C1815100D00{p['bloom']}
-+CVars=0B5735101E110D2A11181F0D280C1815100D00{p['light']}
-+CVars=0B5734161B10151C572D16171C141809091C0B3F10151444485749
-+CVars=0B5734161B10151C5738150E18000A2B1C0A16150F1C3D1C090D1144485749
-+CVars=0B57383A3C2A2A0D00151C44495749
-+CVars=0B572C0A1C0B342A38382A1C0D0D10171E{p['ssao']}
-+CVars=0B572C0A1C0B342A38382F18150C1C4449
-+CVars=0B573D1C1F180C150D3F1C180D0C0B1C5738170D10381510180A10171E44495749
-+CVars=0B5734161B10151C342A3838{p['aniso']}
-+CVars=0B57342A38383A160C170D444D5749
-+CVars=0B5734180D1C0B101815280C1815100D00351C0F1C154448
-+CVars=0B572A11181D160E573A2A345734180134161B10151C3A180A1A181D1C0A444B
-+CVars=0B572A11181D160E573D100A0D18171A1C2A1A18151C4449574C
-+CVars=0B5734161B10151C573D00171814101A361B131C1A0D2A11181D160E4448
-+CVars=0B573D1C090D11361F3F101C151D280C1815100D004449
-+CVars=0B572B1C1F0B181A0D101617280C1815100D004449
-+CVars=0B572A0D180D101A341C0A1135363D3D100A0D18171A1C2A1A18151C{p['view']}
-+CVars=1F161510181E1C5735363D3D100A0D18171A1C2A1A18151C44485749
-+CVars=1F161510181E1C5734101735363D4449
-+CVars=0B573D1C0D18101534161D1C444B
-+CVars=0B5734180D1C0B101815280C1815100D00351C0F1C154448
-+CVars=0B572A0D0B1C181410171E57291616152A10031C444A4949
-+CVars=0B573C14100D0D1C0B2A09180E172B180D1C2A1A18151C44485749
-+CVars=0B5729180B0D101A151C35363D3B10180A4449
-+CVars=0B5734161B10151C370C143D00171814101A291610170D35101E110D0A4448
-+CVars=1D1000572A1C0D3D1C1A18153B181210171E2B2D2A10031C301735161B1B004448494B4D
-+CVars=0B57292C3B3E2F1C0B0A101617444C
-+CVars=0B5734161B10151C2A101409151C2A11181D1C0B4449
-"""
-        return config
-
-    def apply_advanced_graphics(self, preset="God Mode"):
-        """
-        ### NEW FUNCTION: Apply advanced graphics preset ###
-        Combines Active.sav modifications with UserCustom.ini enhancements
-        """
-        # Generate advanced config
-        config_content = self.generate_advanced_config(preset)
-        
-        # Save to file
-        config_path = self.resource_path("assets/user.mkvip")
-        with open(config_path, "w") as f:
-            f.write(config_content)
-        
-        print(f"✓ Applied {preset} graphics preset")
-        return True
 
     def push_active_shadow_file(self):
         """
