@@ -814,7 +814,8 @@ class Game(Optimizer):
             b'\x03': "Balanced",
             b'\x04': "HD",
             b'\x05': "HDR",
-            b'\x06': "Ultra HD"
+            b'\x06': "Ultra HD",
+            b'\x07': "Extreme HDR"
         }
         return graphics_setting_dict.get(graphics_setting_hex, None)
 
@@ -922,7 +923,8 @@ class Game(Optimizer):
             "Balanced": b'\x03',
             "HD": b'\x04',
             "HDR": b'\x05',
-            "Ultra HD": b'\x06'
+            "Ultra HD": b'\x06',
+            "Extreme HDR": b'\x07'
         }
 
         graphics_setting = graphics_setting_dict.get(quality, b'\x02')
@@ -931,6 +933,188 @@ class Game(Optimizer):
         graphics_files = ["ArtQuality", "LobbyRenderQuality", "BattleRenderQuality"]
         for value in graphics_files:
             self.change_graphics_file(value, graphics_setting)
+
+    def apply_pc_ultra_cvars(self):
+        """Apply PC-specific ultra graphics CVars to UserCustom.ini"""
+        user_custom_path = f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
+
+        # Pull current file
+        self.adb.sync.pull(user_custom_path, self.resource_path(r'assets\user.mkvip'))
+
+        # PC Ultra CVars for maximum graphics
+        pc_ultra_cvars = [
+            "; === PC BEAST MODE GRAPHICS (MK Tool) ===",
+            "+CVars=r.ViewDistanceScale=3",  # 3x view distance
+            "+CVars=r.Streaming.PoolSize=3000",  # 3GB texture pool
+            "+CVars=r.Shadow.MaxResolution=2048",  # 2K shadows
+            "+CVars=r.PostProcessAAQuality=6",  # Ultra AA
+            "+CVars=r.SkeletalMeshLODBias=-1",  # Better character models
+            "+CVars=r.StaticMeshLODBias=-1",  # Better building models
+            "+CVars=r.MaxAnisotropy=16",  # 16x anisotropic filtering
+            "+CVars=r.BloomQuality=5",  # Max bloom
+            "+CVars=r.ReflectionCaptureResolution=256",  # High-res reflections
+            "+CVars=r.MotionBlurQuality=0",  # Disable motion blur
+            "+CVars=fx.MaxCPUParticlesPerEmitter=2000",  # More particles
+        ]
+
+        # Read existing content
+        with open(self.resource_path(r'assets\user.mkvip'), 'r') as f:
+            content = f.read()
+
+        # Remove old PC CVars if they exist
+        if "; === PC BEAST MODE GRAPHICS" in content:
+            lines = content.split('\n')
+            new_lines = []
+            skip = False
+            for line in lines:
+                if "; === PC BEAST MODE GRAPHICS" in line:
+                    skip = True
+                elif skip and (line.startswith('[') or (line and not line.startswith('+CVars=') and not line.startswith(';'))):
+                    skip = False
+                if not skip:
+                    new_lines.append(line)
+            content = '\n'.join(new_lines)
+
+        # Add PC CVars at the end
+        with open(self.resource_path(r'assets\user.mkvip'), 'w') as f:
+            f.write(content.rstrip() + '\n\n')
+            for cvar in pc_ultra_cvars:
+                f.write(cvar + '\n')
+
+        # Push back to device
+        self.adb.sync.push(self.resource_path(r'assets\user.mkvip'), user_custom_path)
+
+    def apply_competitive_cvars(self):
+        """Apply competitive visibility CVars (grass reduction, fog removal)"""
+        user_custom_path = f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
+
+        # Pull current file
+        self.adb.sync.pull(user_custom_path, self.resource_path(r'assets\user.mkvip'))
+
+        # Competitive CVars for maximum visibility
+        competitive_cvars = [
+            "; === COMPETITIVE MODE (MK Tool) ===",
+            "+CVars=foliage.DensityScale=0.2",  # Reduced grass
+            "+CVars=r.Shadow.MaxResolution=512",  # Low shadows
+            "+CVars=r.Fog=0",  # No fog
+            "+CVars=r.VolumetricFog=0",  # No volumetric fog
+            "+CVars=r.TonemapperGamma=2.5",  # Brighter
+            "+CVars=r.Tonemapper.Sharpen=2",  # Very sharp
+            "+CVars=r.MotionBlurQuality=0",  # No motion blur
+            "+CVars=r.DepthOfFieldQuality=0",  # No depth of field
+            "+CVars=r.ViewDistanceScale=3",  # Max view distance
+        ]
+
+        # Read existing content
+        with open(self.resource_path(r'assets\user.mkvip'), 'r') as f:
+            content = f.read()
+
+        # Remove old competitive CVars if they exist
+        if "; === COMPETITIVE MODE" in content:
+            lines = content.split('\n')
+            new_lines = []
+            skip = False
+            for line in lines:
+                if "; === COMPETITIVE MODE" in line:
+                    skip = True
+                elif skip and (line.startswith('[') or (line and not line.startswith('+CVars=') and not line.startswith(';'))):
+                    skip = False
+                if not skip:
+                    new_lines.append(line)
+            content = '\n'.join(new_lines)
+
+        # Add competitive CVars at the end
+        with open(self.resource_path(r'assets\user.mkvip'), 'w') as f:
+            f.write(content.rstrip() + '\n\n')
+            for cvar in competitive_cvars:
+                f.write(cvar + '\n')
+
+        # Push back to device
+        self.adb.sync.push(self.resource_path(r'assets\user.mkvip'), user_custom_path)
+
+    def set_pc_ultra_graphics(self):
+        """PC-only ultra graphics settings via Gameloop registry"""
+        # DirectX optimizations
+        self.set_dword("ForceDirectX", 1)
+        self.set_dword("FxaaQuality", 3)  # Max FXAA (mobile max is 2)
+        self.set_dword("RenderOptimizeEnabled", 0)  # Disable optimization = max quality
+        self.set_dword("LocalShaderCacheEnabled", 1)
+        self.set_dword("ShaderCacheEnabled", 1)
+        self.set_dword("VSyncEnabled", 0)  # Let GPU run free for max FPS
+
+        # Content Scale - 3x for PC (mobile max is 2x)
+        for version_key in self.pubg_versions.keys():
+            content_scale_key = f"{version_key}_ContentScale"
+            reg_content_scale = self.get_reg(content_scale_key)
+            if reg_content_scale is not None:
+                self.set_dword(content_scale_key, 3)  # 3x = Ultra sharp
+
+    def set_ultra_resolution(self, width, height):
+        """Set custom resolution for PC (1080p, 2K, 4K)"""
+        self.set_dword("VMResWidth", width)
+        self.set_dword("VMResHeight", height)
+
+        # Set DPI based on resolution
+        if width >= 3840:  # 4K
+            dpi = 640
+        elif width >= 2560:  # 2K
+            dpi = 560
+        else:  # 1080p
+            dpi = 480
+
+        self.set_dword("VMDPI", dpi)
+
+    def apply_beast_mode(self):
+        """BEAST MODE: Maximum graphics + 120 FPS + 4K"""
+        # Set Extreme HDR graphics
+        self.set_graphics_quality("Extreme HDR")
+
+        # Set max FPS
+        self.set_fps("Ultra Extreme")
+
+        # PC Ultra graphics registry settings
+        self.set_pc_ultra_graphics()
+
+        # 4K resolution
+        self.set_ultra_resolution(3840, 2160)
+
+        # Apply PC ultra CVars
+        self.apply_pc_ultra_cvars()
+
+    def apply_competitive_mode(self):
+        """COMPETITIVE MODE: Max visibility + Max FPS"""
+        # Low graphics for max FPS
+        self.set_graphics_quality("Smooth")
+
+        # Max FPS
+        self.set_fps("Ultra Extreme")
+
+        # 1080p for performance
+        self.set_ultra_resolution(1920, 1080)
+
+        # Disable VSync
+        self.set_dword("VSyncEnabled", 0)
+
+        # Apply competitive CVars
+        self.apply_competitive_cvars()
+
+    def apply_streamer_mode(self):
+        """STREAMER MODE: High quality + Stable 60 FPS"""
+        # High graphics
+        self.set_graphics_quality("HDR")
+
+        # Stable 60 FPS
+        self.set_fps("High")
+
+        # 1080p for streaming
+        self.set_ultra_resolution(1920, 1080)
+
+        # 2x content scale
+        for version_key in self.pubg_versions.keys():
+            content_scale_key = f"{version_key}_ContentScale"
+            reg_content_scale = self.get_reg(content_scale_key)
+            if reg_content_scale is not None:
+                self.set_dword(content_scale_key, 2)
 
     def push_active_shadow_file(self):
         """
