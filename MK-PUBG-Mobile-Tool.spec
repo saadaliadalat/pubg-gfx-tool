@@ -19,9 +19,47 @@ ping3_datas, ping3_binaries, ping3_hiddenimports = collect_all('ping3')
 adbutils_datas, adbutils_binaries, adbutils_hiddenimports = collect_all('adbutils')
 wmi_datas, wmi_binaries, wmi_hiddenimports = collect_all('wmi')
 
+# Prepare combined lists
+all_datas = [
+    ('assets', 'assets'),
+    ('images', 'images'),
+]
+all_datas.extend(ping3_datas)
+all_datas.extend(adbutils_datas)
+all_datas.extend(wmi_datas)
+
+all_binaries = []
+all_binaries.extend(ping3_binaries)
+all_binaries.extend(adbutils_binaries)
+all_binaries.extend(wmi_binaries)
+
+all_hiddenimports = [
+    'adbutils',
+    'GPUtil',
+    'ping3',
+    'psutil',
+    'pywintypes',
+    'pythoncom',
+    'win32com.client',
+    'win32com.shell',
+    'win32api',
+    'win32timezone',
+    'winshell',
+    'wmi',
+    'xmltodict',
+    'PyQt5',
+    'PyQt5.QtCore',
+    'PyQt5.QtGui',
+    'PyQt5.QtWidgets',
+]
+all_hiddenimports.extend(ping3_hiddenimports)
+all_hiddenimports.extend(adbutils_hiddenimports)
+all_hiddenimports.extend(wmi_hiddenimports)
+
 a = Analysis(
     ['main.py'],
     pathex=[],
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     binaries=binaries,
@@ -60,6 +98,11 @@ a = Analysis(
 =======
     ] + ping3_hiddenimports + adbutils_hiddenimports + wmi_hiddenimports,
 >>>>>>> ec40b436f206ef5eacdc379d4263a2d7fb91ec70
+=======
+    binaries=all_binaries,
+    datas=all_datas,
+    hiddenimports=all_hiddenimports,
+>>>>>>> 8a34e042c2197c5e7dd188096df292c0b17764a1
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
