@@ -3,14 +3,19 @@ from PyInstaller.utils.hooks import collect_all
 
 block_cipher = None
 
+# Collect all submodules for problematic packages
+ping3_datas, ping3_binaries, ping3_hiddenimports = collect_all('ping3')
+adbutils_datas, adbutils_binaries, adbutils_hiddenimports = collect_all('adbutils')
+wmi_datas, wmi_binaries, wmi_hiddenimports = collect_all('wmi')
+
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],
+    binaries=ping3_binaries + adbutils_binaries + wmi_binaries,
     datas=[
         ('assets', 'assets'),
         ('images', 'images'),
-    ],
+    ] + ping3_datas + adbutils_datas + wmi_datas,
     hiddenimports=[
         'adbutils',
         'GPUtil',
@@ -29,7 +34,7 @@ a = Analysis(
         'PyQt5.QtCore',
         'PyQt5.QtGui',
         'PyQt5.QtWidgets',
-    ],
+    ] + ping3_hiddenimports + adbutils_hiddenimports + wmi_hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -40,11 +45,6 @@ a = Analysis(
     noarchive=False,
 )
 
-# Collect all submodules
-a.datas += collect_all('ping3')[0]
-a.datas += collect_all('adbutils')[0]
-a.datas += collect_all('wmi')[0]
-
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(
@@ -53,7 +53,6 @@ exe = EXE(
     a.binaries,
     a.zipfiles,
     a.datas,
-    [],
     name='MK-PUBG-Mobile-Tool',
     debug=False,
     bootloader_ignore_signals=False,
@@ -67,5 +66,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='assets\\icons\\logo.ico',
+    icon='assets/icons/logo.ico'
 )
