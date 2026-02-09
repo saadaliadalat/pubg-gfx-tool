@@ -85,6 +85,23 @@ class Registry(Settings):
 
 
 class Optimizer(Registry):
+    gameloop_process_names = {
+        'aow_exe.exe',
+        'AndroidEmulatorEn.exe',
+        'AndroidEmulator.exe',
+        'AndroidEmulatorEx.exe',
+        'TBSWebRenderer.exe',
+        'syzs_dl_svr.exe',
+        'AppMarket.exe',
+        'QMEmulatorService.exe',
+        'RuntimeBroker.exe',
+        'GameLoader.exe',
+        'TSettingCenter.exe',
+        'Auxillary.exe',
+        'TP3Helper.exe',
+        'tp3helper.dat',
+        'GameDownload.exe',
+    }
 
     def temp_cleaner(self):
         """
@@ -276,6 +293,152 @@ class Optimizer(Registry):
         except Exception as e:
             self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
 
+    def apply_latency_tweaks(self):
+        """
+        Apply Windows latency tweaks for smoother 120 FPS gameplay.
+        """
+        commands = [
+            [
+                'reg', 'ADD',
+                r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile',
+                '/v', 'NetworkThrottlingIndex',
+                '/t', 'REG_DWORD',
+                '/d', '0xffffffff',
+                '/f'
+            ],
+            [
+                'reg', 'ADD',
+                r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile',
+                '/v', 'SystemResponsiveness',
+                '/t', 'REG_DWORD',
+                '/d', '0',
+                '/f'
+            ],
+            [
+                'reg', 'ADD',
+                r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games',
+                '/v', 'GPU Priority',
+                '/t', 'REG_DWORD',
+                '/d', '8',
+                '/f'
+            ],
+            [
+                'reg', 'ADD',
+                r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games',
+                '/v', 'Priority',
+                '/t', 'REG_DWORD',
+                '/d', '6',
+                '/f'
+            ],
+            [
+                'reg', 'ADD',
+                r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games',
+                '/v', 'Scheduling Category',
+                '/t', 'REG_SZ',
+                '/d', 'High',
+                '/f'
+            ],
+            [
+                'reg', 'ADD',
+                r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games',
+                '/v', 'SFIO Priority',
+                '/t', 'REG_SZ',
+                '/d', 'High',
+                '/f'
+            ],
+            [
+                'reg', 'ADD',
+                r'HKCU\System\GameConfigStore',
+                '/v', 'GameDVR_Enabled',
+                '/t', 'REG_DWORD',
+                '/d', '0',
+                '/f'
+            ],
+            [
+                'reg', 'ADD',
+                r'HKCU\Software\Microsoft\Windows\CurrentVersion\GameDVR',
+                '/v', 'AppCaptureEnabled',
+                '/t', 'REG_DWORD',
+                '/d', '0',
+                '/f'
+            ],
+            [
+                'reg', 'ADD',
+                r'HKLM\SOFTWARE\Policies\Microsoft\Windows\GameDVR',
+                '/v', 'AllowGameDVR',
+                '/t', 'REG_DWORD',
+                '/d', '0',
+                '/f'
+            ],
+        ]
+
+        try:
+            for command in commands:
+                subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return True
+        except Exception as e:
+            self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
+            return False
+
+    def force_gameloop_resource_allocation(self):
+        """
+        Increase Gameloop VM CPU/RAM allocation to reduce lag.
+
+        Returns:
+            tuple[int, int]: Allocated RAM in MB and CPU core count.
+        """
+        total_ram_gb = psutil.virtual_memory().total / (1024 ** 3)
+        ram_value = round(total_ram_gb * 0.9) * 1024
+        ram_value = max(1024, min(ram_value, 12 * 1024))
+
+        total_cores = psutil.cpu_count(logical=False) or psutil.cpu_count(logical=True) or 1
+        cpu_value = max(1, round(total_cores * 0.9))
+        cpu_value = min(cpu_value, 12)
+
+        self.set_dword("VMMemorySizeInMB", ram_value)
+        self.set_dword("VMCpuCount", cpu_value)
+
+        return ram_value, cpu_value
+
+    def boost_gameloop_priority(self, priority="high"):
+        """
+        Boosts Gameloop processes to high priority and uses all CPU cores.
+
+        Returns:
+            tuple[int, bool]: Number of processes updated, and whether requested priority applied.
+        """
+        priority_map = {
+            "high": getattr(psutil, "HIGH_PRIORITY_CLASS", None),
+            "realtime": getattr(psutil, "REALTIME_PRIORITY_CLASS", None),
+        }
+        priority_class = priority_map.get(str(priority).lower())
+        if priority_class is None:
+            priority_class = priority_map.get("high")
+        if priority_class is None:
+            return 0, False
+
+        cpu_cores = psutil.cpu_count(logical=True) or 1
+        cpu_affinity = list(range(cpu_cores))
+        boosted = 0
+        applied_requested = True
+
+        for process in psutil.process_iter(['name']):
+            if process.info['name'] in self.gameloop_process_names:
+                try:
+                    process.nice(priority_class)
+                    try:
+                        process.cpu_affinity(cpu_affinity)
+                    except (AttributeError, psutil.AccessDenied, NotImplementedError):
+                        pass
+                    boosted += 1
+                except psutil.AccessDenied:
+                    applied_requested = False
+                    continue
+                except psutil.NoSuchProcess:
+                    continue
+
+        return boosted, applied_requested
+
     def optimize_for_nvidia(self):
         def change_nvidia_profile():
             gameloop_ui_path = self.get_local_reg("InstallPath", path="UI").replace("\\", "/")
@@ -322,6 +485,47 @@ class Optimizer(Registry):
         except Exception as e:
             self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
 
+    def optimize_for_amd(self):
+        """
+        Forces Gameloop executables to use high-performance GPU on AMD systems.
+        """
+        try:
+            def is_gpu_amd() -> bool:
+                try:
+                    gpu_provider = wmi.WMI().Win32_VideoController()[0].AdapterCompatibility
+                    return "AMD" in gpu_provider or "Radeon" in gpu_provider
+                except Exception:
+                    return False
+
+            if not is_gpu_amd():
+                return False
+
+            install_path = self.get_local_reg("InstallPath", path="UI")
+            if not install_path:
+                return False
+
+            registry_keys = [
+                'AndroidEmulator.exe',
+                'AndroidEmulatorEn.exe',
+                'AndroidEmulatorEx.exe',
+                'aow_exe.exe',
+            ]
+
+            for key in registry_keys:
+                command = [
+                    'reg', 'ADD',
+                    r'HKEY_CURRENT_USER\SOFTWARE\Microsoft\DirectX\UserGpuPreferences',
+                    '/v', fr'{install_path}\{key}',
+                    '/t', 'REG_SZ',
+                    '/d', 'GpuPreference=2;',
+                    '/f'
+                ]
+                subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return True
+        except Exception as e:
+            self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
+            return False
+
     @staticmethod
     def kill_gameloop():
         """
@@ -332,23 +536,7 @@ class Optimizer(Registry):
             - False if no process was killed.
         """
         # List of processes to be killed
-        processes_to_kill = [
-            'aow_exe.exe',  # Process 1
-            'AndroidEmulatorEn.exe',  # Process 2
-            'AndroidEmulator.exe',  # Process 3
-            'AndroidEmulatorEx.exe',  # Process 4
-            'TBSWebRenderer.exe',  # Process 5
-            'syzs_dl_svr.exe',  # Process 6
-            'AppMarket.exe',  # Process 7
-            'QMEmulatorService.exe',  # Process 8
-            'RuntimeBroker.exe',  # Process 9
-            'GameLoader.exe',  # Process 10
-            'TSettingCenter.exe',  # Process 11
-            'Auxillary.exe',  # Process 12
-            'TP3Helper.exe',  # Process 13
-            'tp3helper.dat',  # Process 14
-            'GameDownload.exe'  # Process 15
-        ]
+        processes_to_kill = sorted(Optimizer.gameloop_process_names)
 
         processes_killed = 0
 
