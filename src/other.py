@@ -97,8 +97,9 @@ class Other(QObject):
             self.app.optimize_gameloop_registry()
             self.app.optimize_for_nvidia()
             self.app.optimize_for_amd()
-            self.app.force_gameloop_resource_allocation()
-            self.app.boost_gameloop_priority(priority="high")
+            self.app.apply_latency_tweaks()
+            self.app.force_gameloop_resource_allocation(aggressive=True)
+            self.app.boost_gameloop_priority(priority="realtime")
             self.app.show_status_message("Gameloop optimizer applied successfully.")
         except Exception as e:
             self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
