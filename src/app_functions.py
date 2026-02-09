@@ -380,7 +380,7 @@ class Optimizer(Registry):
             self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
             return False
 
-    def force_gameloop_resource_allocation(self):
+    def force_gameloop_resource_allocation(self, aggressive: bool = False):
         """
         Increase Gameloop VM CPU/RAM allocation to reduce lag.
 
@@ -388,12 +388,16 @@ class Optimizer(Registry):
             tuple[int, int]: Allocated RAM in MB and CPU core count.
         """
         total_ram_gb = psutil.virtual_memory().total / (1024 ** 3)
-        ram_value = round(total_ram_gb * 0.9) * 1024
-        ram_value = max(1024, min(ram_value, 12 * 1024))
+        ram_fraction = 0.95 if aggressive else 0.9
+        max_ram_gb = 64 if aggressive else 12
+        ram_value = round(total_ram_gb * ram_fraction) * 1024
+        ram_value = max(2048, min(ram_value, max_ram_gb * 1024))
 
         total_cores = psutil.cpu_count(logical=False) or psutil.cpu_count(logical=True) or 1
-        cpu_value = max(1, round(total_cores * 0.9))
-        cpu_value = min(cpu_value, 12)
+        cpu_fraction = 0.95 if aggressive else 0.9
+        max_cores = 32 if aggressive else 12
+        cpu_value = max(1, round(total_cores * cpu_fraction))
+        cpu_value = min(cpu_value, max_cores)
 
         self.set_dword("VMMemorySizeInMB", ram_value)
         self.set_dword("VMCpuCount", cpu_value)
@@ -422,20 +426,26 @@ class Optimizer(Registry):
         boosted = 0
         applied_requested = True
 
+        target_names = {name.lower() for name in self.gameloop_process_names}
+
         for process in psutil.process_iter(['name']):
-            if process.info['name'] in self.gameloop_process_names:
-                try:
-                    process.nice(priority_class)
-                    try:
-                        process.cpu_affinity(cpu_affinity)
-                    except (AttributeError, psutil.AccessDenied, NotImplementedError):
-                        pass
-                    boosted += 1
-                except psutil.AccessDenied:
+            process_name = (process.info.get('name') or '').lower()
+            if process_name not in target_names:
+                continue
+            try:
+                process.nice(priority_class)
+                if process.nice() != priority_class:
                     applied_requested = False
-                    continue
-                except psutil.NoSuchProcess:
-                    continue
+                try:
+                    process.cpu_affinity(cpu_affinity)
+                except (AttributeError, psutil.AccessDenied, NotImplementedError):
+                    pass
+                boosted += 1
+            except psutil.AccessDenied:
+                applied_requested = False
+                continue
+            except psutil.NoSuchProcess:
+                continue
 
         return boosted, applied_requested
 
@@ -961,7 +971,8 @@ class Game(Optimizer):
             "Ultra": b"\x05",
             "Extreme": b"\x06",
             "Extreme+": b"\x07",
-            "Ultra Extreme": b"\x08"
+            "Ultra Extreme": b"\x08",
+            "240 FPS": b"\x09"
         }
         fps_value = fps_mapping.get(val)
 
@@ -1020,6 +1031,7 @@ class Game(Optimizer):
             b"\x06": "Extreme",
             b"\x07": "Extreme+",
             b"\x08": "Ultra Extreme",
+            b"\x09": "240 FPS",
         }
         return fps_dict.get(fps_hex, None)
 
@@ -1253,12 +1265,12 @@ class Game(Optimizer):
         self.set_dword("VMDPI", dpi)
 
     def apply_beast_mode(self):
-        """BEAST MODE: Maximum graphics + 120 FPS + 4K"""
+        """BEAST MODE: Maximum graphics + 240 FPS + 4K"""
         # Set Extreme HDR graphics
         self.set_graphics_quality("Extreme HDR")
 
         # Set max FPS
-        self.set_fps("Ultra Extreme")
+        self.set_fps("240 FPS")
 
         # PC Ultra graphics registry settings
         self.set_pc_ultra_graphics()
@@ -1275,7 +1287,7 @@ class Game(Optimizer):
         self.set_graphics_quality("Smooth")
 
         # Max FPS
-        self.set_fps("Ultra Extreme")
+        self.set_fps("240 FPS")
 
         # 1080p for performance
         self.set_ultra_resolution(1920, 1080)

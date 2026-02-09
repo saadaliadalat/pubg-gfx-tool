@@ -201,7 +201,8 @@ class GFX(QObject):
             self.ui.ultra_fps_btn,
             self.ui.extreme_fps_btn,
             self.ui.fps90_fps_btn,
-            self.ui.fps120_fps_btn
+            self.ui.fps120_fps_btn,
+            self.ui.fps240_fps_btn
         ]
         self.fps_value = self.app.get_fps()
 
@@ -272,7 +273,8 @@ class GFX(QObject):
             self.ui.ultra_fps_btn,
             self.ui.extreme_fps_btn,
             self.ui.fps90_fps_btn,
-            self.ui.fps120_fps_btn
+            self.ui.fps120_fps_btn,
+            self.ui.fps240_fps_btn
         ]
         for button in buttons:
             button.clicked.connect(lambda checked, btn=button: self.check_button_selected(buttons, btn))
@@ -308,6 +310,7 @@ class GFX(QObject):
             self.ui.extreme_fps_btn,
             self.ui.fps90_fps_btn,
             self.ui.fps120_fps_btn,
+            self.ui.fps240_fps_btn,
             self.ui.classic_style_btn,
             self.ui.colorful_style_btn,
             self.ui.realistic_style_btn,
@@ -356,7 +359,7 @@ class GFX(QObject):
             }
         """)
         self.beast_mode_btn.clicked.connect(self.apply_beast_mode_preset)
-        self.beast_mode_btn.setToolTip("Extreme HDR + 120 FPS + 4K + PC Ultra Graphics")
+        self.beast_mode_btn.setToolTip("Extreme HDR + 240 FPS + 4K + PC Ultra Graphics")
 
         # Competitive Mode button
         self.competitive_mode_btn = QPushButton("⚡ COMPETITIVE", self.ui.GraphicsFrame)
@@ -379,7 +382,7 @@ class GFX(QObject):
             }
         """)
         self.competitive_mode_btn.clicked.connect(self.apply_competitive_mode_preset)
-        self.competitive_mode_btn.setToolTip("Max Visibility + 120 FPS + Grass Reduction")
+        self.competitive_mode_btn.setToolTip("Max Visibility + 240 FPS + Grass Reduction")
 
         # Streamer Mode button
         self.streamer_mode_btn = QPushButton("🎥 STREAMER", self.ui.GraphicsFrame)
@@ -416,7 +419,7 @@ class GFX(QObject):
         self.app.save_graphics_file()
         self.app.push_active_shadow_file()
         self.app.start_app()
-        self.app.show_status_message("🔥 BEAST MODE ACTIVATED! Extreme HDR + 120 FPS + 4K + PC Ultra")
+        self.app.show_status_message("🔥 BEAST MODE ACTIVATED! Extreme HDR + 240 FPS + 4K + PC Ultra")
 
     def apply_competitive_mode_preset(self):
         """Apply COMPETITIVE MODE preset"""
@@ -425,7 +428,7 @@ class GFX(QObject):
         self.app.save_graphics_file()
         self.app.push_active_shadow_file()
         self.app.start_app()
-        self.app.show_status_message("⚡ COMPETITIVE MODE ACTIVATED! Max Visibility + 120 FPS")
+        self.app.show_status_message("⚡ COMPETITIVE MODE ACTIVATED! Max Visibility + 240 FPS")
 
     def apply_streamer_mode_preset(self):
         """Apply STREAMER MODE preset"""
