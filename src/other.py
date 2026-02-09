@@ -54,6 +54,8 @@ class Other(QObject):
         ui.tempcleaner_other_btn.clicked.connect(self.temp_cleaner_button_click)
         ui.glsmartsettings_other_btn.clicked.connect(self.gameloop_smart_settings_button_click)
         ui.gloptimizer_other_btn.clicked.connect(self.gameloop_optimizer_button_click)
+        ui.glpriority_other_btn.clicked.connect(self.gameloop_priority_button_click)
+        ui.gllatency_other_btn.clicked.connect(self.gameloop_latency_button_click)
         ui.all_other_btn.clicked.connect(self.all_recommended_button_click)
         ui.forceclosegl_other_btn.clicked.connect(self.kill_gameloop_processes_button_click)
         ui.shortcut_other_btn.clicked.connect(self.shortcut_submit_button_click)
@@ -94,7 +96,45 @@ class Other(QObject):
             self.app.add_to_windows_defender_exclusion()
             self.app.optimize_gameloop_registry()
             self.app.optimize_for_nvidia()
+            self.app.optimize_for_amd()
+            self.app.force_gameloop_resource_allocation()
+            self.app.boost_gameloop_priority(priority="high")
             self.app.show_status_message("Gameloop optimizer applied successfully.")
+        except Exception as e:
+            self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
+            self.app.show_status_message(f"There was an Error saved in error.log")
+
+    def gameloop_priority_button_click(self, e):
+        """ Gameloop Priority Boost Button On Click Function """
+        try:
+            priority_value = self.ui.glpriority_dropdown.currentText().lower()
+            ram_mb, cpu_cores = self.app.force_gameloop_resource_allocation()
+            boosted, applied_requested = self.app.boost_gameloop_priority(priority=priority_value)
+            if boosted:
+                message = (
+                    f"Gameloop boosted ({priority_value}): {cpu_cores} CPU cores, {ram_mb}MB RAM, "
+                    f"{boosted} processes."
+                )
+                if not applied_requested:
+                    message += " Some processes may need admin rights."
+            else:
+                message = f"Resource allocation updated ({priority_value}): {cpu_cores} CPU cores, {ram_mb}MB RAM."
+                if not self.app.is_gameloop_running():
+                    message += " Start Gameloop to apply priority boost."
+            self.app.show_status_message(message)
+        except Exception as e:
+            self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
+            self.app.show_status_message(f"There was an Error saved in error.log")
+
+    def gameloop_latency_button_click(self, e):
+        """ Gameloop Latency Tweaks Button On Click Function """
+        try:
+            applied = self.app.apply_latency_tweaks()
+            if applied:
+                message = "Latency tweaks applied. Restart Windows for full effect."
+            else:
+                message = "Latency tweaks failed. Try running as admin."
+            self.app.show_status_message(message)
         except Exception as e:
             self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
             self.app.show_status_message(f"There was an Error saved in error.log")
@@ -105,6 +145,10 @@ class Other(QObject):
             self.app.add_to_windows_defender_exclusion()
             self.app.optimize_gameloop_registry()
             self.app.optimize_for_nvidia()
+            self.app.optimize_for_amd()
+            self.app.force_gameloop_resource_allocation()
+            self.app.boost_gameloop_priority(priority="high")
+            self.app.apply_latency_tweaks()
             self.app.temp_cleaner()
             self.app.show_status_message("All recommended settings applied successfully.")
         except Exception as e:
