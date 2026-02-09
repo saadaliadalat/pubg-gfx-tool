@@ -1350,7 +1350,7 @@ class Game(Optimizer):
         safe_path = "/sdcard/mk_safe_folder"
         data_path_for_account = f"/data/data/{self.pubg_package}"
 
-        self.adb.push(self.resource_path('assets\mk_kr.ini'), user_custom_ini_path)
+        self.adb.push(self.resource_path('assets/mk_kr.ini'), user_custom_ini_path)
 
         self.adb.shell(f"mkdir -p {safe_path}")
         self.adb.shell(f"cp -r {data_path_for_account}/shared_prefs {safe_path}/shared_prefs")

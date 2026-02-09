@@ -325,7 +325,8 @@ class GFX(QObject):
 
     def create_pc_preset_buttons(self):
         """Create PC Beast Mode preset buttons dynamically"""
-        from PyQt5.QtWidgets import QPushButton, QFont
+        from PyQt5.QtWidgets import QPushButton
+        from PyQt5.QtGui import QFont
         from PyQt5.QtCore import QSize
 
         # Create preset buttons frame position (above graphics buttons)
