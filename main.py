@@ -7,8 +7,8 @@ from src.update import UpdateWindow
 from PyQt5 import QtCore
 from os import environ
 
-APP_NAME = "MK PUBG Mobile Tool"
-APP_VERSION = "v1.0.8"
+APP_NAME = "EX Tool"
+APP_VERSION = "v0.1"
 FULL_APP_NAME = f"{APP_NAME} {APP_VERSION}"
 ctypes.windll.kernel32.SetConsoleTitleW(FULL_APP_NAME)
 

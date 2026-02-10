@@ -971,8 +971,7 @@ class Game(Optimizer):
             "Ultra": b"\x05",
             "Extreme": b"\x06",
             "Extreme+": b"\x07",
-            "Ultra Extreme": b"\x08",
-            "240 FPS": b"\x09"
+            "Ultra Extreme": b"\x08"
         }
         fps_value = fps_mapping.get(val)
 
@@ -1031,7 +1030,6 @@ class Game(Optimizer):
             b"\x06": "Extreme",
             b"\x07": "Extreme+",
             b"\x08": "Ultra Extreme",
-            b"\x09": "240 FPS",
         }
         return fps_dict.get(fps_hex, None)
 
@@ -1265,12 +1263,12 @@ class Game(Optimizer):
         self.set_dword("VMDPI", dpi)
 
     def apply_beast_mode(self):
-        """BEAST MODE: Maximum graphics + 240 FPS + 4K"""
+        """BEAST MODE: Maximum graphics + Ultra Extreme FPS + 4K"""
         # Set Extreme HDR graphics
         self.set_graphics_quality("Extreme HDR")
 
         # Set max FPS
-        self.set_fps("240 FPS")
+        self.set_fps("Ultra Extreme")
 
         # PC Ultra graphics registry settings
         self.set_pc_ultra_graphics()
@@ -1282,12 +1280,12 @@ class Game(Optimizer):
         self.apply_pc_ultra_cvars()
 
     def apply_competitive_mode(self):
-        """COMPETITIVE MODE: Max visibility + Max FPS"""
+        """COMPETITIVE MODE: Max visibility + Ultra Extreme FPS"""
         # Low graphics for max FPS
         self.set_graphics_quality("Smooth")
 
         # Max FPS
-        self.set_fps("240 FPS")
+        self.set_fps("Ultra Extreme")
 
         # 1080p for performance
         self.set_ultra_resolution(1920, 1080)

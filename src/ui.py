@@ -25,42 +25,73 @@ class Ui_MainWindow(object):
         icon = QIcon()
         icon.addFile(resource_path(r"assets\icons\logo.ico"), QSize(), QIcon.Normal, QIcon.Off)
         MainWindow.setWindowIcon(icon)
-        MainWindow.setStyleSheet(u"QMenu::item { background-color: rgb(85, 85, 85); }\n"
-                                 "                QComboBox::drop-down {\n"
-                                 "                border-image: none;\n"
-                                 "                }\n"
-                                 "                QComboBox {\n"
-                                 "                border-image: url(:/Graphics/fps.png);\n"
-                                 "                text-align: center;\n"
-                                 "                color: #969696;\n"
-                                 "                padding-left: 15px;\n"
-                                 "                padding-top: -5px;\n"
-                                 "                }\n"
-                                 "\n"
-                                 "                QPushButton {\n"
-                                 "                border-image: url(:/Graphics/fps.png);\n"
-                                 "                background-color: none;\n"
-                                 "                background-repeat: no-repeat;\n"
-                                 "                text-align: center;\n"
-                                 "                border: none;\n"
-                                 "                color: #969696;\n"
-                                 "                padding-top: -3px;\n"
-                                 "                }\n"
-                                 "\n"
-                                 "                QPushButton:checked,\n"
-                                 "                QPushButton:pressed {\n"
-                                 "                border-image: url(:/Graphics/fps_ckecked.png);\n"
-                                 "                background-repeat: no-repeat;\n"
-                                 "                color: #c7fff"
-                                 "6;\n"
-                                 "                text-align: center;\n"
-                                 "                }\n"
-                                 "\n"
-                                 "                QPushButton:disabled {\n"
-                                 "                color: rgb(80, 80, 80);\n"
-                                 "                background-color: rgba(6, 6, 6, 200);\n"
-                                 "                }\n"
-                                 "            ")
+        MainWindow.setStyleSheet(u"""
+                QMenu::item { background-color: #2f2f2f; }
+
+                QComboBox::drop-down { border-image: none; }
+                QComboBox {
+                    border-image: url(:/Graphics/fps.png);
+                    text-align: center;
+                    color: #c9c9c9;
+                    padding-left: 14px;
+                    padding-top: -4px;
+                }
+                QComboBox QListView {
+                    background-color: rgba(18, 18, 18, 235);
+                    color: #ededed;
+                    border: 1px solid rgba(255, 255, 255, 35);
+                }
+
+                QPushButton {
+                    border-image: url(:/Graphics/fps.png);
+                    background-color: none;
+                    background-repeat: no-repeat;
+                    text-align: center;
+                    border: none;
+                    color: #c9c9c9;
+                    padding-top: -3px;
+                }
+                QPushButton:checked,
+                QPushButton:pressed {
+                    border-image: url(:/Graphics/fps_ckecked.png);
+                    background-repeat: no-repeat;
+                    color: #e9fff8;
+                    text-align: center;
+                }
+                QPushButton:disabled {
+                    color: rgb(80, 80, 80);
+                    background-color: rgba(6, 6, 6, 200);
+                }
+
+                QFrame#frame {
+                    background-color: rgba(10, 12, 14, 170);
+                    border: 1px solid rgba(255, 255, 255, 30);
+                    border-radius: 14px;
+                }
+                QFrame#GraphicsFrame,
+                QFrame#FramerateFrame,
+                QFrame#StyleFrame,
+                QFrame#ShadowFrame,
+                QFrame#ResolutionkrFrame {
+                    background-color: rgba(0, 0, 0, 40);
+                    border: 1px solid rgba(255, 255, 255, 25);
+                    border-radius: 10px;
+                }
+                QLabel#graphics_label,
+                QLabel#fps_label,
+                QLabel#style_label,
+                QLabel#shadow_label,
+                QLabel#resolution_label {
+                    color: #f1f1f1;
+                }
+                QFrame#PagesFrame {
+                    background-color: rgba(8, 8, 8, 120);
+                    border-radius: 12px;
+                }
+                QLabel#appname_label {
+                    color: #f7f7f7;
+                }
+            """)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.appbackground = QLabel(self.centralwidget)
@@ -71,7 +102,7 @@ class Ui_MainWindow(object):
         self.stackedWidget = QStackedWidget(self.centralwidget)
         self.stackedWidget.setObjectName(u"stackedWidget")
         self.stackedWidget.setGeometry(QRect(29, 80, 1081, 651))
-        self.stackedWidget.setStyleSheet(u"QStackedWidget { background-color: #f5f5f5; }")
+        self.stackedWidget.setStyleSheet(u"QStackedWidget { background-color: transparent; }")
         self.gfx_page = QWidget()
         self.gfx_page.setObjectName(u"gfx_page")
         self.gfx_page_background = QLabel(self.gfx_page)
@@ -172,17 +203,17 @@ class Ui_MainWindow(object):
         self.frame.setMaximumSize(QSize(1081, 581))
         self.frame.setFrameShape(QFrame.NoFrame)
         self.gridLayout = QGridLayout(self.frame)
-        self.gridLayout.setSpacing(0)
+        self.gridLayout.setSpacing(8)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setContentsMargins(8, 8, 8, 8)
         self.GraphicsFrame = QFrame(self.frame)
         self.GraphicsFrame.setObjectName(u"GraphicsFrame")
-        self.GraphicsFrame.setMinimumSize(QSize(1, 1))
+        self.GraphicsFrame.setMinimumSize(QSize(1, 120))
         self.GraphicsFrame.setMaximumSize(QSize(99999, 999999))
         self.GraphicsFrame.setStyleSheet(u"")
         self.graphics_label = QLabel(self.GraphicsFrame)
         self.graphics_label.setObjectName(u"graphics_label")
-        self.graphics_label.setGeometry(QRect(11, 0, 136, 37))
+        self.graphics_label.setGeometry(QRect(11, 36, 180, 37))
         font6 = QFont(font_family)
         font6.setPointSize(23)
         font6.setBold(True)
@@ -194,12 +225,12 @@ class Ui_MainWindow(object):
                                           "                                ")
         self.layoutWidget = QWidget(self.GraphicsFrame)
         self.layoutWidget.setObjectName(u"layoutWidget")
-        self.layoutWidget.setGeometry(QRect(11, 50, 861, 43))
+        self.layoutWidget.setGeometry(QRect(11, 74, 900, 43))
         self.GraphicsLayout = QHBoxLayout(self.layoutWidget)
-        self.GraphicsLayout.setSpacing(1)
+        self.GraphicsLayout.setSpacing(10)
         self.GraphicsLayout.setObjectName(u"GraphicsLayout")
         self.GraphicsLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
-        self.GraphicsLayout.setContentsMargins(2, 1, 2, 1)
+        self.GraphicsLayout.setContentsMargins(8, 4, 8, 4)
         self.smooth_graphics_btn = QPushButton(self.layoutWidget)
         self.smooth_graphics_btn.setObjectName(u"smooth_graphics_btn")
         sizePolicy.setHeightForWidth(self.smooth_graphics_btn.sizePolicy().hasHeightForWidth())
@@ -283,7 +314,7 @@ class Ui_MainWindow(object):
 
         self.FramerateFrame = QFrame(self.frame)
         self.FramerateFrame.setObjectName(u"FramerateFrame")
-        self.FramerateFrame.setMinimumSize(QSize(821, 155))
+        self.FramerateFrame.setMinimumSize(QSize(821, 120))
         self.FramerateFrame.setMaximumSize(QSize(9999, 9999))
         self.FramerateFrame.setStyleSheet(u"")
         self.fps_label = QLabel(self.FramerateFrame)
@@ -293,13 +324,13 @@ class Ui_MainWindow(object):
         self.fps_label.setStyleSheet(u"color: #ffffff;")
         self.layoutWidget1 = QWidget(self.FramerateFrame)
         self.layoutWidget1.setObjectName(u"layoutWidget1")
-        self.layoutWidget1.setGeometry(QRect(10, 61, 1006, 90))
+        self.layoutWidget1.setGeometry(QRect(10, 56, 1006, 84))
         self.FramerateLayout = QGridLayout(self.layoutWidget1)
-        self.FramerateLayout.setHorizontalSpacing(6)
-        self.FramerateLayout.setVerticalSpacing(6)
+        self.FramerateLayout.setHorizontalSpacing(10)
+        self.FramerateLayout.setVerticalSpacing(10)
         self.FramerateLayout.setObjectName(u"FramerateLayout")
         self.FramerateLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
-        self.FramerateLayout.setContentsMargins(2, 1, 2, 1)
+        self.FramerateLayout.setContentsMargins(8, 6, 8, 6)
         self.low_fps_btn = QPushButton(self.layoutWidget1)
         self.low_fps_btn.setObjectName(u"low_fps_btn")
         sizePolicy.setHeightForWidth(self.low_fps_btn.sizePolicy().hasHeightForWidth())
@@ -391,32 +422,21 @@ class Ui_MainWindow(object):
 
         self.FramerateLayout.addWidget(self.fps120_fps_btn, 1, 2, 1, 1)
 
-        self.fps240_fps_btn = QPushButton(self.layoutWidget1)
-        self.fps240_fps_btn.setObjectName(u"fps240_fps_btn")
-        sizePolicy.setHeightForWidth(self.fps240_fps_btn.sizePolicy().hasHeightForWidth())
-        self.fps240_fps_btn.setSizePolicy(sizePolicy)
-        self.fps240_fps_btn.setMinimumSize(QSize(120, 41))
-        self.fps240_fps_btn.setMaximumSize(QSize(120, 41))
-        self.fps240_fps_btn.setFont(font3)
-        self.fps240_fps_btn.setStyleSheet(u"")
-        self.fps240_fps_btn.setCheckable(True)
-        self.fps240_fps_btn.setFlat(True)
-
-        self.FramerateLayout.addWidget(self.fps240_fps_btn, 1, 3, 1, 1)
+        # Removed 240 FPS option (not supported)
 
         self.gridLayout.addWidget(self.FramerateFrame, 1, 0, 1, 2)
 
         self.StyleFrame = QFrame(self.frame)
         self.StyleFrame.setObjectName(u"StyleFrame")
         self.StyleFrame.setEnabled(True)
-        self.StyleFrame.setMinimumSize(QSize(820, 231))
+        self.StyleFrame.setMinimumSize(QSize(820, 170))
         self.StyleFrame.setMaximumSize(QSize(9999, 9999))
         self.StyleFrame.setStyleSheet(u"QPushButton {\n"
                                       "                                border: none;\n"
                                       "                                border-image: none;\n"
                                       "                                background: transparent;\n"
                                       "                                icon-size: 100%;\n"
-                                      "                                qproperty-iconSize: 150px; /* set the size of the button icon */\n"
+                                      "                                qproperty-iconSize: 120px; /* set the size of the button icon */\n"
                                       "                                qproperty-text: \"\"; /* set the text displayed on the button */\n"
                                       "                                qproperty-flat: true; /* remove the default button border */\n"
                                       "                                padding: 0; /* remove any padding */\n"
@@ -434,16 +454,17 @@ class Ui_MainWindow(object):
         self.style_label.setStyleSheet(u"color: #ffffff;")
         self.layoutWidget2 = QWidget(self.StyleFrame)
         self.layoutWidget2.setObjectName(u"layoutWidget2")
-        self.layoutWidget2.setGeometry(QRect(10, 60, 851, 167))
+        self.layoutWidget2.setGeometry(QRect(10, 54, 851, 120))
         self.StyleLayout = QHBoxLayout(self.layoutWidget2)
         self.StyleLayout.setObjectName(u"StyleLayout")
-        self.StyleLayout.setContentsMargins(0, 0, 0, 0)
+        self.StyleLayout.setSpacing(12)
+        self.StyleLayout.setContentsMargins(10, 6, 10, 6)
         self.classic_style_btn = QPushButton(self.layoutWidget2)
         self.classic_style_btn.setObjectName(u"classic_style_btn")
         sizePolicy.setHeightForWidth(self.classic_style_btn.sizePolicy().hasHeightForWidth())
         self.classic_style_btn.setSizePolicy(sizePolicy)
-        self.classic_style_btn.setMinimumSize(QSize(165, 165))
-        self.classic_style_btn.setMaximumSize(QSize(165, 165))
+        self.classic_style_btn.setMinimumSize(QSize(120, 120))
+        self.classic_style_btn.setMaximumSize(QSize(120, 120))
         self.classic_style_btn.setStyleSheet(u"QPushButton {\n"
                                              "                                                qproperty-icon: url(:/Graphics/Classic.png); /* set the button icon */\n"
                                              "                                                }\n"
@@ -456,8 +477,8 @@ class Ui_MainWindow(object):
         self.colorful_style_btn.setObjectName(u"colorful_style_btn")
         sizePolicy.setHeightForWidth(self.colorful_style_btn.sizePolicy().hasHeightForWidth())
         self.colorful_style_btn.setSizePolicy(sizePolicy)
-        self.colorful_style_btn.setMinimumSize(QSize(165, 165))
-        self.colorful_style_btn.setMaximumSize(QSize(165, 165))
+        self.colorful_style_btn.setMinimumSize(QSize(120, 120))
+        self.colorful_style_btn.setMaximumSize(QSize(120, 120))
         self.colorful_style_btn.setStyleSheet(u"QPushButton {\n"
                                               "                                                qproperty-icon: url(:/Graphics/Colorful.png); /* set the button icon */\n"
                                               "                                                }\n"
@@ -471,8 +492,8 @@ class Ui_MainWindow(object):
         self.realistic_style_btn.setObjectName(u"realistic_style_btn")
         sizePolicy.setHeightForWidth(self.realistic_style_btn.sizePolicy().hasHeightForWidth())
         self.realistic_style_btn.setSizePolicy(sizePolicy)
-        self.realistic_style_btn.setMinimumSize(QSize(165, 165))
-        self.realistic_style_btn.setMaximumSize(QSize(165, 165))
+        self.realistic_style_btn.setMinimumSize(QSize(120, 120))
+        self.realistic_style_btn.setMaximumSize(QSize(120, 120))
         self.realistic_style_btn.setStyleSheet(u"QPushButton {\n"
                                                "                                                qproperty-icon: url(:/Graphics/Realistic.png); /* set the button icon */\n"
                                                "                                                }\n"
@@ -486,8 +507,8 @@ class Ui_MainWindow(object):
         self.soft_style_btn.setObjectName(u"soft_style_btn")
         sizePolicy.setHeightForWidth(self.soft_style_btn.sizePolicy().hasHeightForWidth())
         self.soft_style_btn.setSizePolicy(sizePolicy)
-        self.soft_style_btn.setMinimumSize(QSize(165, 165))
-        self.soft_style_btn.setMaximumSize(QSize(165, 165))
+        self.soft_style_btn.setMinimumSize(QSize(120, 120))
+        self.soft_style_btn.setMaximumSize(QSize(120, 120))
         self.soft_style_btn.setStyleSheet(u"QPushButton {\n"
                                           "                                                qproperty-icon: url(:/Graphics/Soft.png); /* set the button icon */\n"
                                           "                                                }\n"
@@ -500,8 +521,8 @@ class Ui_MainWindow(object):
         self.movie_style_btn.setObjectName(u"movie_style_btn")
         sizePolicy.setHeightForWidth(self.movie_style_btn.sizePolicy().hasHeightForWidth())
         self.movie_style_btn.setSizePolicy(sizePolicy)
-        self.movie_style_btn.setMinimumSize(QSize(165, 165))
-        self.movie_style_btn.setMaximumSize(QSize(165, 165))
+        self.movie_style_btn.setMinimumSize(QSize(120, 120))
+        self.movie_style_btn.setMaximumSize(QSize(120, 120))
         self.movie_style_btn.setStyleSheet(u"QPushButton {\n"
                                            "                                                qproperty-icon: url(:/Graphics/Movie.png); /* set the button icon */\n"
                                            "                                                }\n"
@@ -514,7 +535,7 @@ class Ui_MainWindow(object):
 
         self.ShadowFrame = QFrame(self.frame)
         self.ShadowFrame.setObjectName(u"ShadowFrame")
-        self.ShadowFrame.setMinimumSize(QSize(1, 1))
+        self.ShadowFrame.setMinimumSize(QSize(1, 80))
         self.ShadowFrame.setMaximumSize(QSize(9999, 9999))
         self.ShadowFrame.setStyleSheet(u"")
         self.shadow_label = QLabel(self.ShadowFrame)
@@ -524,12 +545,12 @@ class Ui_MainWindow(object):
         self.shadow_label.setStyleSheet(u"color: #ffffff;")
         self.layoutWidget_2 = QWidget(self.ShadowFrame)
         self.layoutWidget_2.setObjectName(u"layoutWidget_2")
-        self.layoutWidget_2.setGeometry(QRect(10, 60, 287, 43))
+        self.layoutWidget_2.setGeometry(QRect(10, 44, 287, 43))
         self.ShadowLayout = QHBoxLayout(self.layoutWidget_2)
-        self.ShadowLayout.setSpacing(1)
+        self.ShadowLayout.setSpacing(12)
         self.ShadowLayout.setObjectName(u"ShadowLayout")
         self.ShadowLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
-        self.ShadowLayout.setContentsMargins(2, 1, 2, 1)
+        self.ShadowLayout.setContentsMargins(10, 6, 10, 6)
         self.disable_shadow_btn = QPushButton(self.layoutWidget_2)
         self.disable_shadow_btn.setObjectName(u"disable_shadow_btn")
         self.disable_shadow_btn.setEnabled(False)
@@ -562,7 +583,7 @@ class Ui_MainWindow(object):
 
         self.ResolutionkrFrame = QFrame(self.frame)
         self.ResolutionkrFrame.setObjectName(u"ResolutionkrFrame")
-        self.ResolutionkrFrame.setMinimumSize(QSize(1, 1))
+        self.ResolutionkrFrame.setMinimumSize(QSize(1, 80))
         self.ResolutionkrFrame.setMaximumSize(QSize(9999, 9999))
         self.resolution_label = QLabel(self.ResolutionkrFrame)
         self.resolution_label.setObjectName(u"resolution_label")
@@ -575,7 +596,7 @@ class Ui_MainWindow(object):
         self.resolution_label.setStyleSheet(u"color: #ffffff;")
         self.resolution_btn = QPushButton(self.ResolutionkrFrame)
         self.resolution_btn.setObjectName(u"resolution_btn")
-        self.resolution_btn.setGeometry(QRect(10, 60, 141, 41))
+        self.resolution_btn.setGeometry(QRect(10, 44, 141, 41))
         sizePolicy.setHeightForWidth(self.resolution_btn.sizePolicy().hasHeightForWidth())
         self.resolution_btn.setSizePolicy(sizePolicy)
         self.resolution_btn.setMinimumSize(QSize(141, 41))
@@ -820,15 +841,16 @@ class Ui_MainWindow(object):
         self.stackedWidget.addWidget(self.about_page)
         self.appname_label = QLabel(self.centralwidget)
         self.appname_label.setObjectName(u"appname_label")
-        self.appname_label.setGeometry(QRect(30, 0, 669, 57))
+        self.appname_label.setGeometry(QRect(30, 4, 720, 52))
         font14 = QFont(font_family)
-        font14.setPointSize(35)
+        font14.setPointSize(32)
         font14.setBold(True)
         font14.setWeight(75)
         self.appname_label.setFont(font14)
-        self.appname_label.setStyleSheet(u"text-align: center;\n"
+        self.appname_label.setStyleSheet(u"text-align: left;\n"
                                          "                        border: none;\n"
                                          "                        color: rgb(255, 255, 255);\n"
+                                         "                        padding-left: 6px;\n"
                                          "                    ")
         self.appstatus_label = QLabel(self.centralwidget)
         self.appstatus_label.setObjectName(u"appstatus_label")
@@ -915,7 +937,14 @@ class Ui_MainWindow(object):
                                       "                        border: none;\n"
                                       "                        color: #969696; /* sets the text color to #969696 */\n"
                                       "                        text-align: center; /* aligns the text to the left */\n"
+                                      "                        padding: 10px 0;\n"
+                                      "                        border-radius: 8px;\n"
                                       "\n"
+                                      "                        }\n"
+                                      "\n"
+                                      "                        QPushButton:hover {\n"
+                                      "                        color: #ffffff;\n"
+                                      "                        background-color: rgba(255, 255, 255, 20);\n"
                                       "                        }\n"
                                       "\n"
                                       "                        QPushButton:checked {\n"
@@ -960,7 +989,7 @@ class Ui_MainWindow(object):
         # setupUi
 
     def retranslateUi(self, MainWindow):
-            MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MK PUBG Mobile Tool", None))
+            MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"EX Tool v0.1", None))
             self.appbackground.setText("")
             self.gfx_page_background.setText("")
             self.submit_gfx_btn.setText(QCoreApplication.translate("MainWindow", u"Submit", None))
@@ -987,7 +1016,6 @@ class Ui_MainWindow(object):
             self.extreme_fps_btn.setText(QCoreApplication.translate("MainWindow", u"Extreme", None))
             self.fps90_fps_btn.setText(QCoreApplication.translate("MainWindow", u"Extreme+", None))
             self.fps120_fps_btn.setText(QCoreApplication.translate("MainWindow", u"Ultra Extreme", None))
-            self.fps240_fps_btn.setText(QCoreApplication.translate("MainWindow", u"240 FPS", None))
             self.style_label.setText(QCoreApplication.translate("MainWindow", u"Style", None))
             self.shadow_label.setText(QCoreApplication.translate("MainWindow", u"Shadow", None))
             # if QT_CONFIG(tooltip)
@@ -1108,7 +1136,7 @@ class Ui_MainWindow(object):
             self.ipad_rest_btn.setText(QCoreApplication.translate("MainWindow", u"Reset Resolution", None))
             self.label_8.setText("")
             self.about_label_text.setText(QCoreApplication.translate("MainWindow",
-                                                                     u"<h2>Optimize Your PUBG Mobile Experience with MK PUBG Mobile Tool</h2>\n"
+                                                                     u"<h2>EX Tool v0.1 \u2014 PUBG Mobile Optimizer</h2>\n"
                                                                      "\n"
                                                                      "                                <h3>Features:</h3>\n"
                                                                      "                                <ul>\n"
@@ -1131,7 +1159,7 @@ class Ui_MainWindow(object):
                                                                      "                                <p>Level up your gaming experience today!</p>\n"
                                                                      "                                </center>\n"
                                                                      "                            ", None))
-            self.appname_label.setText(QCoreApplication.translate("MainWindow", u"MK PUBG Mobile Tool v1.0.0", None))
+            self.appname_label.setText(QCoreApplication.translate("MainWindow", u"EX Tool v0.1", None))
             self.appstatus_label.setText(QCoreApplication.translate("MainWindow", u"Status:", None))
             self.appstatus_text_lable.setText("")
             self.close_btn.setText(QCoreApplication.translate("MainWindow", u"X", None))
