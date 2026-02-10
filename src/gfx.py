@@ -25,6 +25,10 @@ class SubmitWorkerThread(QThread):
         if checked_style_button:
             self.app.set_graphics_style(checked_style_button.property("styleId"))
 
+        checked_shadow_button = next((button for button in self.gfx.shadow_buttons if button.isChecked()), None)
+        if checked_shadow_button:
+            self.app.set_shadow(checked_shadow_button.text())
+
         self.app.save_graphics_file()
         self.app.push_active_shadow_file()
 
@@ -121,6 +125,7 @@ class GFX(QObject):
         self.graphics_buttons_func()
         self.fps_buttons_func()
         self.style_buttons_func()
+        self.shadow_buttons_func()
         self.create_pc_preset_buttons()  # Add PC preset buttons
 
         self.gfx_buttons(enabled=False)
@@ -288,6 +293,14 @@ class GFX(QObject):
         for button in buttons:
             button.clicked.connect(lambda checked, btn=button: self.check_button_selected(buttons, btn))
 
+    def shadow_buttons_func(self):
+        buttons = [
+            self.ui.disable_shadow_btn,
+            self.ui.enable_shadow_btn
+        ]
+        for button in buttons:
+            button.clicked.connect(lambda checked, btn=button: self.check_button_selected(buttons, btn))
+
     @staticmethod
     def check_button_selected(buttons, clicked_button):
         for button in buttons:
@@ -313,8 +326,8 @@ class GFX(QObject):
             self.ui.realistic_style_btn,
             self.ui.soft_style_btn,
             self.ui.movie_style_btn,
-            # self.ui.disable_shadow_btn,
-            # self.ui.enable_shadow_btn,
+            self.ui.disable_shadow_btn,
+            self.ui.enable_shadow_btn,
             self.ui.submit_gfx_btn
         ]
 

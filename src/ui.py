@@ -26,70 +26,121 @@ class Ui_MainWindow(object):
         icon.addFile(resource_path(r"assets\icons\logo.ico"), QSize(), QIcon.Normal, QIcon.Off)
         MainWindow.setWindowIcon(icon)
         MainWindow.setStyleSheet(u"""
-                QMenu::item { background-color: #2f2f2f; }
-
-                QComboBox::drop-down { border-image: none; }
-                QComboBox {
-                    border-image: url(:/Graphics/fps.png);
-                    text-align: center;
-                    color: #c9c9c9;
-                    padding-left: 14px;
-                    padding-top: -4px;
+                QMainWindow {
+                    background-color: #0a0c0e;
                 }
-                QComboBox QListView {
-                    background-color: rgba(18, 18, 18, 235);
-                    color: #ededed;
-                    border: 1px solid rgba(255, 255, 255, 35);
+                
+                QMenu {
+                    background-color: #1a1c1e;
+                    color: #e0e0e0;
+                    border: 1px solid #2d3135;
+                }
+                QMenu::item:selected {
+                    background-color: #1eb980;
+                    color: #ffffff;
+                }
+
+                QComboBox {
+                    background-color: rgba(30, 34, 38, 180);
+                    border: 1px solid rgba(255, 255, 255, 20);
+                    border-radius: 6px;
+                    padding-left: 10px;
+                    color: #ffffff;
+                    min-height: 35px;
+                }
+                QComboBox:hover {
+                    border: 1px solid #1eb980;
+                }
+                QComboBox::drop-down {
+                    border: 0px;
+                }
+                QComboBox QAbstractItemView {
+                    background-color: #1a1c1e;
+                    color: #e0e0e0;
+                    selection-background-color: #1eb980;
+                    border: 1px solid #2d3135;
+                    outline: 0px;
                 }
 
                 QPushButton {
-                    border-image: url(:/Graphics/fps.png);
-                    background-color: none;
-                    background-repeat: no-repeat;
+                    background-color: rgba(45, 49, 53, 150);
+                    border: 1px solid rgba(255, 255, 255, 15);
+                    border-radius: 8px;
+                    color: #d1d1d1;
+                    padding: 8px 15px;
                     text-align: center;
-                    border: none;
-                    color: #c9c9c9;
-                    padding-top: -3px;
                 }
-                QPushButton:checked,
+                QPushButton:hover {
+                    background-color: rgba(60, 65, 70, 200);
+                    border: 1px solid #1eb980;
+                    color: #ffffff;
+                }
+                QPushButton:checked {
+                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
+                                              stop:0 #1eb980, stop:1 #0b8043);
+                    border: 1px solid #2af598;
+                    color: #ffffff;
+                    font-weight: bold;
+                }
                 QPushButton:pressed {
-                    border-image: url(:/Graphics/fps_ckecked.png);
-                    background-repeat: no-repeat;
-                    color: #e9fff8;
-                    text-align: center;
+                    background-color: #0b8043;
+                    border: 1px solid #2af598;
                 }
                 QPushButton:disabled {
-                    color: rgb(80, 80, 80);
-                    background-color: rgba(6, 6, 6, 200);
+                    background-color: rgba(30, 30, 30, 100);
+                    color: #555555;
+                    border: 1px solid transparent;
                 }
 
                 QFrame#frame {
-                    background-color: rgba(10, 12, 14, 170);
-                    border: 1px solid rgba(255, 255, 255, 30);
-                    border-radius: 14px;
+                    background-color: rgba(14, 18, 22, 220);
+                    border: 1px solid rgba(255, 255, 255, 10);
+                    border-radius: 15px;
                 }
+
                 QFrame#GraphicsFrame,
                 QFrame#FramerateFrame,
                 QFrame#StyleFrame,
                 QFrame#ShadowFrame,
                 QFrame#ResolutionkrFrame {
-                    background-color: rgba(0, 0, 0, 40);
-                    border: 1px solid rgba(255, 255, 255, 25);
-                    border-radius: 10px;
+                    background-color: rgba(25, 30, 35, 160);
+                    border: 1px solid rgba(255, 255, 255, 8);
+                    border-radius: 12px;
+                }
+
+                QLabel {
+                    color: #e0e0e0;
                 }
                 QLabel#graphics_label,
                 QLabel#fps_label,
                 QLabel#style_label,
                 QLabel#shadow_label,
                 QLabel#resolution_label {
-                    color: #f1f1f1;
+                    color: #1eb980;
+                    font-weight: bold;
+                    letter-spacing: 1px;
                 }
-                QFrame#PagesFrame {
-                    background-color: rgba(8, 8, 8, 120);
-                    border-radius: 12px;
-                }
+
                 QLabel#appname_label {
-                    color: #f7f7f7;
+                    color: #ffffff;
+                    font-size: 24px;
+                    font-weight: bold;
+                    letter-spacing: 2px;
+                }
+
+                QScrollBar:vertical {
+                    border: none;
+                    background: #1a1c1e;
+                    width: 10px;
+                    border-radius: 5px;
+                }
+                QScrollBar::handle:vertical {
+                    background: #2d3135;
+                    min-height: 20px;
+                    border-radius: 5px;
+                }
+                QScrollBar::handle:vertical:hover {
+                    background: #1eb980;
                 }
             """)
         self.centralwidget = QWidget(MainWindow)
@@ -121,39 +172,50 @@ class Ui_MainWindow(object):
         font1.setWeight(75)
         self.submit_gfx_btn.setFont(font1)
         self.submit_gfx_btn.setStyleSheet(u"QPushButton {\n"
-                                          "                                border-image: url(:/Graphics/submit.png);\n"
-                                          "                                border: 1px solid black;\n"
-                                          "                                color: rgb(0, 0, 0);\n"
+                                          "                                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, \n"
+                                          "                                                          stop:0 #f0d000, stop:1 #c0a000);\n"
+                                          "                                border: 1px solid #ffd700;\n"
+                                          "                                border-radius: 10px;\n"
+                                          "                                color: #000000;\n"
+                                          "                                font-weight: bold;\n"
                                           "                                }\n"
                                           "\n"
-                                          "                                QPushButton:checked,\n"
+                                          "                                QPushButton:hover {\n"
+                                          "                                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, \n"
+                                          "                                                          stop:0 #ffea00, stop:1 #d4af37);\n"
+                                          "                                border: 1px solid #ffffff;\n"
+                                          "                                }\n"
+                                          "\n"
                                           "                                QPushButton:pressed {\n"
-                                          "                                border-image: url(:/Graphics/submit_pressed.png);\n"
-                                          "                                background-color: rgba(0, 0, 0, 0);\n"
-                                          "                                border: 3px solid #969696;\n"
-                                          "                                background-repeat: no-repeat;\n"
-                                          "                                color: #c7fff6;\n"
-                                          "                                text-align: center;\n"
+                                          "                                background-color: #b8860b;\n"
+                                          "                                border: 2px solid #000000;\n"
                                           "                                }\n"
                                           "                                QPushButton:disabled {\n"
-                                          "                                color: rgb(80, 80, 80);\n"
-                                          "                                background-color: rgba(6, 6, 6, 200);\n"
-                                          "                           "
-                                          "     }\n"
+                                          "                                color: rgba(0, 0, 0, 100);\n"
+                                          "                                background-color: rgba(240, 208, 0, 80);\n"
+                                          "                                }\n"
                                           "                            ")
         self.connect_gameloop_btn = QPushButton(self.gfx_page)
         self.connect_gameloop_btn.setObjectName(u"connect_gameloop_btn")
         self.connect_gameloop_btn.setEnabled(True)
-        self.connect_gameloop_btn.setGeometry(QRect(710, 580, 241, 51))
-        font2 = QFont(font_family)
-        font2.setPointSize(20)
-        font2.setBold(True)
-        font2.setWeight(75)
         self.connect_gameloop_btn.setFont(font2)
-        self.connect_gameloop_btn.setStyleSheet(u"QPushButton:checked {\n"
-                                                "                                color: rgb(0, 170, 0);\n"
-                                                "                                }\n"
-                                                "                            ")
+        self.connect_gameloop_btn.setStyleSheet(u"QPushButton {\n"
+                                                 "                                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, \n"
+                                                 "                                                          stop:0 #222222, stop:1 #111111);\n"
+                                                 "                                border: 1px solid #1eb980;\n"
+                                                 "                                border-radius: 10px;\n"
+                                                 "                                color: #1eb980;\n"
+                                                 "                                }\n"
+                                                 "                                QPushButton:checked {\n"
+                                                 "                                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, \n"
+                                                 "                                                          stop:0 #1eb980, stop:1 #0b8043);\n"
+                                                 "                                color: #ffffff;\n"
+                                                 "                                }\n"
+                                                 "                                QPushButton:hover {\n"
+                                                 "                                border: 1px solid #2af598;\n"
+                                                 "                                color: #2af598;\n"
+                                                 "                                }\n"
+                                                 "                            ")
         self.connect_gameloop_btn.setCheckable(True)
         self.PubgchooseFrame = QFrame(self.gfx_page)
         self.PubgchooseFrame.setObjectName(u"PubgchooseFrame")
@@ -553,7 +615,7 @@ class Ui_MainWindow(object):
         self.ShadowLayout.setContentsMargins(10, 6, 10, 6)
         self.disable_shadow_btn = QPushButton(self.layoutWidget_2)
         self.disable_shadow_btn.setObjectName(u"disable_shadow_btn")
-        self.disable_shadow_btn.setEnabled(False)
+        self.disable_shadow_btn.setEnabled(True)
         sizePolicy.setHeightForWidth(self.disable_shadow_btn.sizePolicy().hasHeightForWidth())
         self.disable_shadow_btn.setSizePolicy(sizePolicy)
         self.disable_shadow_btn.setMinimumSize(QSize(141, 41))
@@ -567,7 +629,7 @@ class Ui_MainWindow(object):
 
         self.enable_shadow_btn = QPushButton(self.layoutWidget_2)
         self.enable_shadow_btn.setObjectName(u"enable_shadow_btn")
-        self.enable_shadow_btn.setEnabled(False)
+        self.enable_shadow_btn.setEnabled(True)
         sizePolicy.setHeightForWidth(self.enable_shadow_btn.sizePolicy().hasHeightForWidth())
         self.enable_shadow_btn.setSizePolicy(sizePolicy)
         self.enable_shadow_btn.setMinimumSize(QSize(141, 41))
