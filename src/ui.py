@@ -198,6 +198,11 @@ class Ui_MainWindow(object):
         self.connect_gameloop_btn = QPushButton(self.gfx_page)
         self.connect_gameloop_btn.setObjectName(u"connect_gameloop_btn")
         self.connect_gameloop_btn.setEnabled(True)
+        self.connect_gameloop_btn.setGeometry(QRect(710, 580, 241, 51))
+        font2 = QFont(font_family)
+        font2.setPointSize(20)
+        font2.setBold(True)
+        font2.setWeight(75)
         self.connect_gameloop_btn.setFont(font2)
         self.connect_gameloop_btn.setStyleSheet(u"QPushButton {\n"
                                                  "                                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, \n"

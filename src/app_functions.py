@@ -87,10 +87,12 @@ class Registry(Settings):
 class Optimizer(Registry):
     gameloop_process_names = {
         'aow_exe.exe',
+        'aow.exe',
         'AndroidEmulatorEn.exe',
         'AndroidEmulator.exe',
         'AndroidEmulatorEx.exe',
         'TBSWebRenderer.exe',
+        'QtWebEngineProcess.exe',
         'syzs_dl_svr.exe',
         'AppMarket.exe',
         'QMEmulatorService.exe',
@@ -380,7 +382,8 @@ class Optimizer(Registry):
             self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
             return False
 
-    def force_gameloop_resource_allocation(self, aggressive: bool = False):
+    def force_gameloop_resource_allocation(self, aggressive: bool = False, target_ram_gb: int | None = None,
+                                           target_cores: int | None = None):
         """
         Increase Gameloop VM CPU/RAM allocation to reduce lag.
 
@@ -388,25 +391,37 @@ class Optimizer(Registry):
             tuple[int, int]: Allocated RAM in MB and CPU core count.
         """
         total_ram_gb = psutil.virtual_memory().total / (1024 ** 3)
-        ram_fraction = 0.95 if aggressive else 0.9
-        max_ram_gb = 64 if aggressive else 12
-        ram_value = round(total_ram_gb * ram_fraction) * 1024
-        ram_value = max(2048, min(ram_value, max_ram_gb * 1024))
+        if target_ram_gb is None:
+            target_ram_gb = 15 if not aggressive else 64
+
+        if aggressive:
+            ram_fraction = 0.95
+            max_ram_gb = target_ram_gb
+            ram_value = round(total_ram_gb * ram_fraction) * 1024
+            ram_value = max(2048, min(ram_value, max_ram_gb * 1024))
+        else:
+            ram_value = max(2048, min(int(target_ram_gb) * 1024, int(total_ram_gb) * 1024))
 
         total_cores = psutil.cpu_count(logical=False) or psutil.cpu_count(logical=True) or 1
-        cpu_fraction = 0.95 if aggressive else 0.9
-        max_cores = 32 if aggressive else 12
-        cpu_value = max(1, round(total_cores * cpu_fraction))
-        cpu_value = min(cpu_value, max_cores)
+        if target_cores is None:
+            target_cores = 12 if not aggressive else 32
+
+        if aggressive:
+            cpu_fraction = 0.95
+            max_cores = target_cores
+            cpu_value = max(1, round(total_cores * cpu_fraction))
+            cpu_value = min(cpu_value, max_cores)
+        else:
+            cpu_value = max(1, min(int(target_cores), int(total_cores)))
 
         self.set_dword("VMMemorySizeInMB", ram_value)
         self.set_dword("VMCpuCount", cpu_value)
 
         return ram_value, cpu_value
 
-    def boost_gameloop_priority(self, priority="high"):
+    def boost_gameloop_priority(self, priority="high", target_cores: int | None = None):
         """
-        Boosts Gameloop processes to high priority and uses all CPU cores.
+        Boosts Gameloop processes to high priority and sets CPU affinity.
 
         Returns:
             tuple[int, bool]: Number of processes updated, and whether requested priority applied.
@@ -422,7 +437,13 @@ class Optimizer(Registry):
             return 0, False
 
         cpu_cores = psutil.cpu_count(logical=True) or 1
-        cpu_affinity = list(range(cpu_cores))
+        if target_cores is None:
+            if str(priority).lower() in {"high", "realtime"}:
+                target_cores = 12
+            else:
+                target_cores = cpu_cores
+        affinity_cores = max(1, min(int(target_cores), int(cpu_cores)))
+        cpu_affinity = list(range(affinity_cores))
         boosted = 0
         applied_requested = True
 
@@ -430,7 +451,7 @@ class Optimizer(Registry):
 
         for process in psutil.process_iter(['name']):
             process_name = (process.info.get('name') or '').lower()
-            if process_name not in target_names:
+            if process_name not in target_names and "renderer" not in process_name and "aow_exe" not in process_name:
                 continue
             try:
                 process.nice(priority_class)
