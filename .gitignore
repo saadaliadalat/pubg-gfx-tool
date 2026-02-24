@@ -16,7 +16,5 @@ dist/
 *.log
 
 # Release artifacts
-MK-PUBG-Mobile-Tool-Release/
-MK-PUBG-Mobile-Tool-v1.0.8/
-MK-PUBG-Mobile-Tool-v1.08/
-MK-PUBG-Mobile-Tool-v*.zip
+EX-Tool-Release/
+EX-Tool-v*.zip

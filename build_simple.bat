@@ -1,6 +1,6 @@
 @echo off
 echo ================================
-echo MK PUBG Mobile Tool - Build Script
+echo EX Tool - Build Script
 echo ================================
 echo.
 
@@ -12,13 +12,13 @@ if exist __pycache__ rmdir /s /q __pycache__
 
 echo.
 echo Building executable with PyInstaller...
-pyinstaller --clean MK-PUBG-Mobile-Tool.spec
+pyinstaller --clean EX-Tool.spec
 
 echo.
-if exist dist\MK-PUBG-Mobile-Tool.exe (
+if exist dist\EX-Tool.exe (
     echo ================================
     echo Build completed successfully!
-    echo Executable location: dist\MK-PUBG-Mobile-Tool.exe
+    echo Executable location: dist\EX-Tool.exe
     echo ================================
 ) else (
     echo ================================

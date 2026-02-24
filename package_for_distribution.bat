@@ -1,11 +1,11 @@
 @echo off
 echo ================================
-echo MK PUBG Mobile Tool - Packager
+echo EX Tool - Packager
 echo ================================
 echo.
 
 REM Check if exe exists
-if not exist dist\MK-PUBG-Mobile-Tool.exe (
+if not exist dist\EX-Tool.exe (
     echo ERROR: Executable not found!
     echo Please run build_simple.bat first.
     pause
@@ -14,26 +14,26 @@ if not exist dist\MK-PUBG-Mobile-Tool.exe (
 
 REM Create distribution folder
 echo Creating distribution package...
-if exist "MK-PUBG-Mobile-Tool-Release" rmdir /s /q "MK-PUBG-Mobile-Tool-Release"
-mkdir "MK-PUBG-Mobile-Tool-Release"
+if exist "EX-Tool-Release" rmdir /s /q "EX-Tool-Release"
+mkdir "EX-Tool-Release"
 
 REM Copy executable
 echo Copying executable...
-copy "dist\MK-PUBG-Mobile-Tool.exe" "MK-PUBG-Mobile-Tool-Release\"
+copy "dist\EX-Tool.exe" "EX-Tool-Release\"
 
 REM Copy assets folder
 echo Copying assets...
-xcopy "assets" "MK-PUBG-Mobile-Tool-Release\assets\" /E /I /Y
+xcopy "assets" "EX-Tool-Release\assets\" /E /I /Y
 
 REM Create README
 echo Creating README...
 (
-echo MK PUBG Mobile Tool v1.0.8
+echo EX Tool v0.1
 echo ================================
 echo.
 echo INSTALLATION:
 echo 1. Extract all files to a folder
-echo 2. Run MK-PUBG-Mobile-Tool.exe
+echo 2. Run EX-Tool.exe
 echo.
 echo REQUIREMENTS:
 echo - Windows 7/8/10/11
@@ -54,26 +54,22 @@ echo 3. Click "Connect to Gameloop"
 echo 4. Select your desired graphics settings
 echo 5. Click "Submit"
 echo.
-echo CONTACT:
-echo GitHub: https://github.com/MohamedKVIP
-echo Discord: https://discord.gg/PDPJM6e6PC
-echo.
 echo ================================
-echo By Mohamed Kamal ^(MKvip^)
+echo EX Tool
 echo ================================
-) > "MK-PUBG-Mobile-Tool-Release\README.txt"
+) > "EX-Tool-Release\README.txt"
 
 REM Create ZIP archive (requires PowerShell)
 echo.
 echo Creating ZIP archive...
-powershell -command "Compress-Archive -Path 'MK-PUBG-Mobile-Tool-Release\*' -DestinationPath 'MK-PUBG-Mobile-Tool-v1.0.8.zip' -Force"
+powershell -command "Compress-Archive -Path 'EX-Tool-Release\*' -DestinationPath 'EX-Tool-v0.1.zip' -Force"
 
 echo.
 echo ================================
 echo Package created successfully!
 echo.
-echo Distribution folder: MK-PUBG-Mobile-Tool-Release\
-echo ZIP archive: MK-PUBG-Mobile-Tool-v1.0.8.zip
+echo Distribution folder: EX-Tool-Release\
+echo ZIP archive: EX-Tool-v0.1.zip
 echo.
 echo You can now share the ZIP file with other gamers!
 echo ================================

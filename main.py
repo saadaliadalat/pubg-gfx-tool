@@ -3,7 +3,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from src.ui_functions import Window, QtWidgets
-from src.update import UpdateWindow
 from PyQt5 import QtCore
 from os import environ
 
@@ -48,16 +47,7 @@ if __name__ == "__main__":
 
     try:
         app = QtWidgets.QApplication(sys.argv)
-
-        update = UpdateWindow()
-        update.check_for_updates(APP_VERSION)
-
-        if update.is_update_available():
-            update.show()
-            if app.exec_() == 0:
-                run_application()
-        else:
-            run_application()
+        run_application()
     except Exception as e:
         with open(f"{Path.cwd()}/error.log", "a") as f:
             f.write(f"-------------------{datetime.now()}-------------------\n")

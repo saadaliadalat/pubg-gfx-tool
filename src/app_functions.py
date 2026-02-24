@@ -22,7 +22,7 @@ from . import setup_logger
 
 class Settings:
     def __init__(self):
-        self.settings = QSettings("MK Apps", "MK PUBG Mobile Tool")
+        self.settings = QSettings("EX Apps", "EX Tool")
         self.REG_PATH = r'SOFTWARE\Tencent\MobileGamePC'
         self.pubg_versions = {
             "com.tencent.ig": "PUBG Mobile Global",
@@ -495,7 +495,7 @@ class Optimizer(Registry):
             tree.write(nvidia_profile_path, encoding='utf-16')
 
         try:
-            nvidia_profile_path = self.resource_path("assets/mk.nip")
+            nvidia_profile_path = self.resource_path("assets/ex.nip")
 
             def is_gpu_nvidia() -> bool:
                 try:
@@ -915,7 +915,7 @@ class Game(Optimizer):
         shortcut = Dispatch('WScript.Shell').CreateShortCut(path_icon)
         shortcut.Targetpath = target
         shortcut.Arguments = f"-startpkg {version_id}  -from DesktopLink"
-        shortcut.Description = "By Mohamed Kamal (MKvip) - Discord: mkvip"
+        shortcut.Description = "EX Tool desktop shortcut"
         shortcut.IconLocation = fr"{gameloop_market_path}\{version_id}.ico"
         shortcut.save()
 
@@ -948,7 +948,7 @@ class Game(Optimizer):
             while not self.adb.shell("getprop dev.bootcomplete"):
                 pass
 
-            self.adb.sync.pull("/default.prop", self.resource_path(r'assets\testADB.mkvip'))
+            self.adb.sync.pull("/default.prop", self.resource_path(r'assets\device_probe.bin'))
             self.is_adb_working = True
 
         except Exception as e:
@@ -969,7 +969,7 @@ class Game(Optimizer):
 
     def get_graphics_file(self, package: str):
         active_savegames_path = f"/sdcard/Android/data/{package}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/SaveGames/Active.sav"
-        local_file_path = self.resource_path('assets/old.mkvip')
+        local_file_path = self.resource_path('assets/active_original.bin')
         self.pubg_package = package
         self.adb.sync.pull(active_savegames_path, local_file_path)
 
@@ -977,7 +977,7 @@ class Game(Optimizer):
             self.active_sav_content = file.read()
 
     def save_graphics_file(self):
-        file_path = self.resource_path("assets/new.mkvip")
+        file_path = self.resource_path("assets/active_modified.bin")
         with open(file_path, 'wb') as file:
             file.write(self.active_sav_content)
 
@@ -1060,9 +1060,9 @@ class Game(Optimizer):
         """
         shadow_name = None
         user_custom_ini_path = f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
-        self.adb.sync.pull(user_custom_ini_path, self.resource_path(r'assets\user.mkvip'))
+        self.adb.sync.pull(user_custom_ini_path, self.resource_path(r'assets\user_custom.ini'))
 
-        with open(self.resource_path(r"assets\user.mkvip")) as file:
+        with open(self.resource_path(r"assets\user_custom.ini")) as file:
             for line in file:
                 line = line.strip()
                 if line.startswith("+CVars=0B572A11181D160E280C1815100D0044"):
@@ -1089,7 +1089,7 @@ class Game(Optimizer):
                          "r.Shadow.MaxCSMResolution": "1", "r.Shadow.DistanceScale": "1",
                          "r.Shadow.CSM.MaxMobileCascades": "1"}
         lines = []
-        with open(self.resource_path(r"assets\user.mkvip"), "r") as file:
+        with open(self.resource_path(r"assets\user_custom.ini"), "r") as file:
             for line in file:
                 if line.strip().startswith("+CVars=0B572A11181D160E280C1815100D0044"):
                     line = f"+CVars=0B572A11181D160E280C1815100D0044{shadow_value}\n"
@@ -1097,7 +1097,7 @@ class Game(Optimizer):
                     line = f"+CVars=0B572C0A1C0B2A11181D160E2A0E100D1A1144{shadow_value}\n"
                 lines.append(line)
 
-        with open(self.resource_path(r"assets\user.mkvip"), "w") as file:
+        with open(self.resource_path(r"assets\user_custom.ini"), "w") as file:
             file.writelines(lines)
 
         return True
@@ -1116,7 +1116,7 @@ class Game(Optimizer):
             b'\x06': "Movie"
         }
 
-        return battle_style_dict.get(battle_style_hex, "Not Found, It Will Be Added In The Next Update")
+        return battle_style_dict.get(battle_style_hex, "Not Found, It Will Be Added In A Future Release")
 
     def set_graphics_style(self, style):
         """
@@ -1129,7 +1129,7 @@ class Game(Optimizer):
             "Soft": b'\x04',
             "Movie": b'\x06'
         }
-        battle_style = battle_style_dict.get(style, "Not Found, It Will Be Added In The Next Update")
+        battle_style = battle_style_dict.get(style, "Not Found, It Will Be Added In A Future Release")
         self.change_graphics_file("BattleRenderStyle", battle_style)
 
     def set_graphics_quality(self, quality):
@@ -1158,11 +1158,11 @@ class Game(Optimizer):
         user_custom_path = f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
 
         # Pull current file
-        self.adb.sync.pull(user_custom_path, self.resource_path(r'assets\user.mkvip'))
+        self.adb.sync.pull(user_custom_path, self.resource_path(r'assets\user_custom.ini'))
 
         # PC Ultra CVars for maximum graphics
         pc_ultra_cvars = [
-            "; === PC BEAST MODE GRAPHICS (MK Tool) ===",
+            "; === PC BEAST MODE GRAPHICS (EX Tool) ===",
             "+CVars=r.ViewDistanceScale=3",  # 3x view distance
             "+CVars=r.Streaming.PoolSize=3000",  # 3GB texture pool
             "+CVars=r.Shadow.MaxResolution=2048",  # 2K shadows
@@ -1177,7 +1177,7 @@ class Game(Optimizer):
         ]
 
         # Read existing content
-        with open(self.resource_path(r'assets\user.mkvip'), 'r') as f:
+        with open(self.resource_path(r'assets\user_custom.ini'), 'r') as f:
             content = f.read()
 
         # Remove old PC CVars if they exist
@@ -1195,24 +1195,24 @@ class Game(Optimizer):
             content = '\n'.join(new_lines)
 
         # Add PC CVars at the end
-        with open(self.resource_path(r'assets\user.mkvip'), 'w') as f:
+        with open(self.resource_path(r'assets\user_custom.ini'), 'w') as f:
             f.write(content.rstrip() + '\n\n')
             for cvar in pc_ultra_cvars:
                 f.write(cvar + '\n')
 
         # Push back to device
-        self.adb.sync.push(self.resource_path(r'assets\user.mkvip'), user_custom_path)
+        self.adb.sync.push(self.resource_path(r'assets\user_custom.ini'), user_custom_path)
 
     def apply_competitive_cvars(self):
         """Apply competitive visibility CVars (grass reduction, fog removal)"""
         user_custom_path = f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
 
         # Pull current file
-        self.adb.sync.pull(user_custom_path, self.resource_path(r'assets\user.mkvip'))
+        self.adb.sync.pull(user_custom_path, self.resource_path(r'assets\user_custom.ini'))
 
         # Competitive CVars for maximum visibility
         competitive_cvars = [
-            "; === COMPETITIVE MODE (MK Tool) ===",
+            "; === COMPETITIVE MODE (EX Tool) ===",
             "+CVars=foliage.DensityScale=0.2",  # Reduced grass
             "+CVars=r.Shadow.MaxResolution=512",  # Low shadows
             "+CVars=r.Fog=0",  # No fog
@@ -1225,7 +1225,7 @@ class Game(Optimizer):
         ]
 
         # Read existing content
-        with open(self.resource_path(r'assets\user.mkvip'), 'r') as f:
+        with open(self.resource_path(r'assets\user_custom.ini'), 'r') as f:
             content = f.read()
 
         # Remove old competitive CVars if they exist
@@ -1243,13 +1243,13 @@ class Game(Optimizer):
             content = '\n'.join(new_lines)
 
         # Add competitive CVars at the end
-        with open(self.resource_path(r'assets\user.mkvip'), 'w') as f:
+        with open(self.resource_path(r'assets\user_custom.ini'), 'w') as f:
             f.write(content.rstrip() + '\n\n')
             for cvar in competitive_cvars:
                 f.write(cvar + '\n')
 
         # Push back to device
-        self.adb.sync.push(self.resource_path(r'assets\user.mkvip'), user_custom_path)
+        self.adb.sync.push(self.resource_path(r'assets\user_custom.ini'), user_custom_path)
 
     def set_pc_ultra_graphics(self):
         """PC-only ultra graphics settings via Gameloop registry"""
@@ -1345,8 +1345,8 @@ class Game(Optimizer):
         data_dir = f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved"
 
         files = [
-            (self.resource_path(r"assets\new.mkvip"), f"{data_dir}/SaveGames/Active.sav"),
-            (self.resource_path(r"assets\user.mkvip"), f"{data_dir}/Config/Android/UserCustom.ini")
+            (self.resource_path(r"assets\active_modified.bin"), f"{data_dir}/SaveGames/Active.sav"),
+            (self.resource_path(r"assets\user_custom.ini"), f"{data_dir}/Config/Android/UserCustom.ini")
         ]
 
         for src, dest in files:
@@ -1359,7 +1359,7 @@ class Game(Optimizer):
 
     def kr_fullhd(self):
         def backup_folder(path):
-            backup_path = path + '.MKbackup'
+            backup_path = path + '.backup'
 
             output = self.adb.shell(f"[ -d {path} ] && echo 1 || echo 0").strip()
             backup_output = self.adb.shell(f"[ -d {backup_path} ] && echo 1 || echo 0").strip()
@@ -1369,7 +1369,7 @@ class Game(Optimizer):
                 self.adb.shell(['rm', '-r', path])
 
         def restore_folder(path):
-            backup_path = path + '.MKbackup'
+            backup_path = path + '.backup'
             backup_output = self.adb.shell(f"[ -d {backup_path} ] && echo 1 || echo 0").strip()
             if backup_output == '1':
                 self.adb.shell(['mv', backup_path, path])
@@ -1378,10 +1378,10 @@ class Game(Optimizer):
         obb_path = f"/sdcard/Android/obb/{self.pubg_package}"
         user_custom_ini_path = f"{data_path}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
 
-        safe_path = "/sdcard/mk_safe_folder"
+        safe_path = "/sdcard/ex_safe_folder"
         data_path_for_account = f"/data/data/{self.pubg_package}"
 
-        self.adb.push(self.resource_path('assets/mk_kr.ini'), user_custom_ini_path)
+        self.adb.push(self.resource_path('assets/ex_kr.ini'), user_custom_ini_path)
 
         self.adb.shell(f"mkdir -p {safe_path}")
         self.adb.shell(f"cp -r {data_path_for_account}/shared_prefs {safe_path}/shared_prefs")

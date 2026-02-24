@@ -1,6 +1,6 @@
 @echo off
 echo ================================
-echo MK PUBG Mobile Tool
+echo EX Tool
 echo Build ^& Package for Distribution
 echo ================================
 echo.
@@ -10,7 +10,7 @@ echo [1/2] Building executable...
 call build_simple.bat
 
 REM Check if build was successful
-if not exist dist\MK-PUBG-Mobile-Tool.exe (
+if not exist dist\EX-Tool.exe (
     echo.
     echo ERROR: Build failed!
     pause
