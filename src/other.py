@@ -52,10 +52,13 @@ class Other(QObject):
         ui = self.ui
 
         ui.tempcleaner_other_btn.clicked.connect(self.temp_cleaner_button_click)
-        ui.glsmartsettings_other_btn.clicked.connect(self.gameloop_smart_settings_button_click)
         ui.gloptimizer_other_btn.clicked.connect(self.gameloop_optimizer_button_click)
         ui.glpriority_other_btn.clicked.connect(self.gameloop_priority_button_click)
         ui.gllatency_other_btn.clicked.connect(self.gameloop_latency_button_click)
+        ui.fpsstabilizer_other_btn.clicked.connect(self.fps_stabilizer_button_click)
+        ui.engine_ini_btn.clicked.connect(self.engine_ini_button_click)
+        ui.headshot_tweaks_btn.clicked.connect(self.headshot_tweaks_button_click)
+        ui.experimental_fps_btn.clicked.connect(self.experimental_fps_button_click)
         ui.all_other_btn.clicked.connect(self.all_recommended_button_click)
         ui.forceclosegl_other_btn.clicked.connect(self.kill_gameloop_processes_button_click)
         ui.shortcut_other_btn.clicked.connect(self.shortcut_submit_button_click)
@@ -73,37 +76,60 @@ class Other(QObject):
         if _width is None or _height is None:
             ui.ipad_rest_btn.hide()
 
+    def _handle_error(self, e, user_message="Operation failed. Check error.log for details."):
+        self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
+        self.app.show_status_message(user_message, msg_type="error")
+
+    def _require_adb(self):
+        if not self.app.is_adb_working:
+            self.app.show_status_message("Connect to GameLoop first.", 4, "warning")
+            return False
+        if not getattr(self.app, "pubg_package", None):
+            self.app.show_status_message("Select PUBG version first.", 4, "warning")
+            return False
+        return True
+
+    @staticmethod
+    def _detect_gpu_provider():
+        gpu_provider = ""
+        try:
+            import wmi
+            controllers = wmi.WMI().Win32_VideoController()
+            if controllers:
+                gpu_provider = controllers[0].AdapterCompatibility or ""
+        except Exception:
+            pass
+        return gpu_provider
+
+    def _apply_gpu_optimization(self):
+        gpu_provider = self._detect_gpu_provider()
+        if "NVIDIA" in gpu_provider:
+            self.app.optimize_for_nvidia()
+        elif "AMD" in gpu_provider or "Radeon" in gpu_provider:
+            self.app.optimize_for_amd()
+
     def temp_cleaner_button_click(self, e):
         """ Temp Cleaner Button On Click Function """
         try:
             self.app.temp_cleaner()
-            self.app.show_status_message("System performance improved.")
+            self.app.show_status_message("System performance improved.", msg_type="success")
         except Exception as e:
-            self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
-            self.app.show_status_message(f"There was an Error saved in error.log")
+            self._handle_error(e)
 
-    def gameloop_smart_settings_button_click(self, e):
-        """ Gameloop Smart Settings Button On Click Function """
-        try:
-            self.app.gameloop_settings()
-            self.app.show_status_message("Smart settings applied successfully.")
-        except Exception as e:
-            self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
-            self.app.show_status_message(f"There was an Error saved in error.log")
     def gameloop_optimizer_button_click(self, e):
-        """ Gameloop Optimizer Button On Click Function """
+        """ Full Resource Boost Button On Click Function """
         try:
             self.app.add_to_windows_defender_exclusion()
             self.app.optimize_gameloop_registry()
-            self.app.optimize_for_nvidia()
-            self.app.optimize_for_amd()
-            self.app.apply_latency_tweaks()
-            self.app.force_gameloop_resource_allocation(aggressive=True)
-            self.app.boost_gameloop_priority(priority="realtime")
-            self.app.show_status_message("Gameloop optimizer applied successfully.")
+            self._apply_gpu_optimization()
+            ram_mb, cpu_cores, boosted = self.app.apply_full_resource_boost()
+            self.app.show_status_message(
+                f"GameLoop fully optimized: {ram_mb // 1024}GB RAM, {cpu_cores} cores, {boosted} processes.",
+                6,
+                "success",
+            )
         except Exception as e:
-            self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
-            self.app.show_status_message(f"There was an Error saved in error.log")
+            self._handle_error(e)
 
     def gameloop_priority_button_click(self, e):
         """ Gameloop Priority Boost Button On Click Function """
@@ -122,10 +148,9 @@ class Other(QObject):
                 message = f"Resource allocation updated ({priority_value}): {cpu_cores} CPU cores, {ram_mb}MB RAM."
                 if not self.app.is_gameloop_running():
                     message += " Start Gameloop to apply priority boost."
-            self.app.show_status_message(message)
+            self.app.show_status_message(message, msg_type="success")
         except Exception as e:
-            self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
-            self.app.show_status_message(f"There was an Error saved in error.log")
+            self._handle_error(e)
 
     def gameloop_latency_button_click(self, e):
         """ Gameloop Latency Tweaks Button On Click Function """
@@ -135,93 +160,162 @@ class Other(QObject):
                 message = "Latency tweaks applied. Restart Windows for full effect."
             else:
                 message = "Latency tweaks failed. Try running as admin."
-            self.app.show_status_message(message)
+            self.app.show_status_message(message, msg_type="success" if applied else "warning")
         except Exception as e:
-            self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
-            self.app.show_status_message(f"There was an Error saved in error.log")
+            self._handle_error(e)
+
+    def fps_stabilizer_button_click(self, e):
+        """ FPS Stabilizer Button On Click Function """
+        try:
+            self.app.apply_fps_stabilizer()
+            self.app.show_status_message("FPS Stabilizer applied. Restart Windows for full effect.", msg_type="success")
+        except Exception as e:
+            self._handle_error(e)
+
+    def engine_ini_button_click(self, e):
+        try:
+            if not self._require_adb():
+                return
+            mode = self.ui.engine_ini_mode_dropdown.currentText().strip().lower()
+            mode = "competitive" if mode not in {"competitive", "balanced"} else mode
+            self.app.push_engine_ini(mode=mode)
+            self.app.show_status_message(f"Engine.ini optimized ({mode}).", msg_type="success")
+        except Exception as ex:
+            self._handle_error(ex)
+
+    def headshot_tweaks_button_click(self, e):
+        try:
+            if not self._require_adb():
+                return
+            self.app.push_engine_ini(mode="competitive")
+            dpi = self.app.set_high_dpi_rendering(560)
+            self.app.show_status_message(f"Headshot tweaks applied. DPI set to {dpi}.", msg_type="success")
+        except Exception as ex:
+            self._handle_error(ex)
+
+    def experimental_fps_button_click(self, e):
+        try:
+            if not self._require_adb():
+                return
+            if not getattr(self.app, "pubg_package", None):
+                self.app.show_status_message("Select and connect PUBG version first.", 5, "warning")
+                return
+            choice = self.ui.experimental_fps_dropdown.currentText().strip()
+            applied = self.app.set_fps_experimental(choice)
+            if not applied:
+                self.app.show_status_message("Experimental FPS value is invalid.", 5, "warning")
+                return
+            self.app.save_graphics_file()
+            self.app.push_active_shadow_file()
+            self.app.start_app()
+            self.app.show_status_message(f"Applied {choice}. This is experimental.", 6, "warning")
+        except Exception as ex:
+            self._handle_error(ex)
+
     def all_recommended_button_click(self, e):
         """ All Recommended Button On Click Function """
         try:
-            self.app.gameloop_settings()
+            self.app.temp_cleaner()
             self.app.add_to_windows_defender_exclusion()
             self.app.optimize_gameloop_registry()
-            self.app.optimize_for_nvidia()
-            self.app.optimize_for_amd()
-            self.app.force_gameloop_resource_allocation()
-            self.app.boost_gameloop_priority(priority="high")
+            self._apply_gpu_optimization()
+            self.app.apply_full_resource_boost()
             self.app.apply_latency_tweaks()
-            self.app.temp_cleaner()
-            self.app.show_status_message("All recommended settings applied successfully.")
+            self.app.apply_fps_stabilizer()
+            if self.app.is_adb_working:
+                self.app.push_engine_ini(mode="competitive")
+                self.app.set_high_dpi_rendering(560)
+            self.app.show_status_message(
+                "All optimizations applied! Restart GameLoop for full effect.",
+                7,
+                "success",
+            )
         except Exception as e:
-            self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
-            self.app.show_status_message(f"There was an Error saved in error.log")
+            self._handle_error(e)
 
     def kill_gameloop_processes_button_click(self, e):
         """Terminates Gameloop processes when the button is clicked."""
-        if self.app.kill_gameloop():
-            message = "All Gameloop processes terminated."
-        else:
-            message = "No processes found to terminate."
-        self.app.show_status_message(message)
+        try:
+            if self.app.kill_gameloop():
+                message = "All Gameloop processes terminated."
+            else:
+                message = "No processes found to terminate."
+            self.app.show_status_message(message, msg_type="warning")
+        except Exception as ex:
+            self._handle_error(ex)
 
     def shortcut_submit_button_click(self, e):
         """ Shortcut Submit Button On Click Function """
-        version_value = self.ui.shortcut_dropdown.currentText()
-        self.app.gen_game_icon(version_value)
-        self.app.show_status_message("Shortcut Generated Successfully")
+        try:
+            version_value = self.ui.shortcut_dropdown.currentText()
+            self.app.gen_game_icon(version_value)
+            self.app.show_status_message("Shortcut generated successfully.", msg_type="success")
+        except Exception as ex:
+            self._handle_error(ex)
 
     def dns_submit_button_click(self, e):
         """ DNS Submit Button On Click Function """
-        dns_key = self.ui.dns_dropdown.currentText()
-        dns_server = self.dns_servers.get(dns_key)
+        try:
+            dns_key = self.ui.dns_dropdown.currentText()
+            dns_server = self.dns_servers.get(dns_key)
 
-        if self.app.change_dns_servers(dns_server):
-            self.dns_dropdown(dns_key)
-            self.app.show_status_message("DNS server changed successfully")
-        else:
-            self.app.show_status_message("Could not change DNS server")
+            if dns_server and self.app.change_dns_servers(dns_server):
+                self.dns_dropdown(dns_key)
+                self.app.show_status_message("DNS server changed successfully.", msg_type="success")
+            else:
+                self.app.show_status_message("Could not change DNS server.", msg_type="warning")
+        except Exception as ex:
+            self._handle_error(ex)
 
     def dns_dropdown(self, value):
-        server, _ = self.dns_servers[value]
-        pings = [ping3.ping(server, timeout=1, unit='ms', size=56) or float('inf') for _ in range(5)]
-        lowest_ping = min(pings)
-        if lowest_ping != float('inf'):
-            ping_result = f"{str(value).split(' -')[0]} Ping: {int(lowest_ping)}ms"
-        else:
-            ping_result = "No response from DNS servers"
-        self.ui.dns_status_label.setText(ping_result)
+        try:
+            server, _ = self.dns_servers[value]
+            pings = [ping3.ping(server, timeout=1, unit='ms', size=56) or float('inf') for _ in range(5)]
+            lowest_ping = min(pings)
+            if lowest_ping != float('inf'):
+                ping_result = f"{str(value).split(' -')[0]} Ping: {int(lowest_ping)}ms"
+            else:
+                ping_result = "No response from DNS servers"
+            self.ui.dns_status_label.setText(ping_result)
+        except Exception:
+            self.ui.dns_status_label.setText("Ping check unavailable.")
 
     def ipad_submit_button_click(self, e):
         try:
             if self.app.is_gameloop_running():
-                self.app.show_status_message(f"Close Gameloop to use this button. (Force Close Gameloop)", 5)
+                self.app.show_status_message(f"Close Gameloop to use this button. (Force Close Gameloop)", 5, "warning")
                 return
-            self.app.show_status_message("please wait, Working on it...", 15)
+            self.app.show_status_message("Please wait, working on it...", 15)
             self.ui.ipad_other_btn.setEnabled(False)
             self.ui.ipad_rest_btn.setEnabled(False)
             self.worker_ipad_submit = IPADWorkerThread(self.app, self.ui, self)
             self.worker_ipad_submit.task_completed.connect(self.submit_ipad_done)
             self.worker_ipad_submit.start()
-        except ValueError:
-            self.app.show_status_message("Invalid width or height values", 5)
+        except Exception as ex:
+            self._handle_error(ex, "Invalid iPad settings values.")
 
     def submit_ipad_done(self):
-        self.ui.ipad_other_btn.setEnabled(True)
-        self.ui.ipad_rest_btn.setEnabled(True)
-        self.ui.ipad_rest_btn.show()
-        gameloop_status = "Restart" if self.app.is_gameloop_running() else "Start"
-        self.app.show_status_message(f"{gameloop_status} Gameloop and enjoy with IPAD settings.", 7)
+        try:
+            self.ui.ipad_other_btn.setEnabled(True)
+            self.ui.ipad_rest_btn.setEnabled(True)
+            self.ui.ipad_rest_btn.show()
+            gameloop_status = "Restart" if self.app.is_gameloop_running() else "Start"
+            self.app.show_status_message(f"{gameloop_status} Gameloop and enjoy with iPad settings.", 7, "success")
+        except Exception as ex:
+            self._handle_error(ex)
 
     def ipad_reset_button_click(self, e):
-        if self.app.is_gameloop_running():
-            self.app.show_status_message(
-                "Close Gameloop to use this button. (Force Close Gameloop)", 5
-            )
-            return
+        try:
+            if self.app.is_gameloop_running():
+                self.app.show_status_message(
+                    "Close Gameloop to use this button. (Force Close Gameloop)", 5, "warning"
+                )
+                return
 
-        width, height = self.app.reset_ipad()
-        self.ui.ipad_rest_btn.hide()
+            width, height = self.app.reset_ipad()
+            self.ui.ipad_rest_btn.hide()
 
-        # gameloop_status = "Restart" if self.app.is_gameloop_running() else "Start"
-        message = f"Start Gameloop to Utilize Resolution ({width} x {height})."
-        self.app.show_status_message(message, 7)
+            message = f"Start Gameloop to Utilize Resolution ({width} x {height})."
+            self.app.show_status_message(message, 7, "success")
+        except Exception as ex:
+            self._handle_error(ex)

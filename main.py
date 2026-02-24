@@ -7,9 +7,16 @@ from PyQt5 import QtCore
 from os import environ
 
 APP_NAME = "EX Tool"
-APP_VERSION = "v0.1"
+APP_VERSION = "v0.2"
 FULL_APP_NAME = f"{APP_NAME} {APP_VERSION}"
 ctypes.windll.kernel32.SetConsoleTitleW(FULL_APP_NAME)
+
+
+def is_admin():
+    try:
+        return bool(ctypes.windll.shell32.IsUserAnAdmin())
+    except Exception:
+        return False
 
 
 def run_application():
@@ -22,6 +29,11 @@ def run_application():
 
 
 if __name__ == "__main__":
+    if not is_admin():
+        args = " ".join(f'"{arg}"' for arg in sys.argv)
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, args, None, 1)
+        sys.exit()
+
     print("[#] Starting the GUI app")
 
     def suppress_qt_warnings():

@@ -15,7 +15,6 @@ import tempfile
 import winshell
 import wmi
 from PyQt5.QtCore import QSettings
-from win32api import EnumDisplayDevices, EnumDisplaySettings
 from win32com.client import Dispatch
 from . import setup_logger
 
@@ -106,130 +105,68 @@ class Optimizer(Registry):
     }
 
     def temp_cleaner(self):
-        """
-        Cleans temporary files and directories.
+        import os
+        import shutil
+        import subprocess
+        import tempfile
+        import winreg
 
-        Returns:
-            bool: True if the function successfully cleans the temporary files and directories.
-        """
-        base_path = getattr(sys, '_MEIPASS', os.path.abspath('.'))
-
-        def clear_files(directory):
+        def clear_dir(path):
             try:
-                for root, dirs, files in os.walk(directory):
-                    for name in files:
-                        os.remove(os.path.join(root, name))
-                    for name in dirs:
-                        shutil.rmtree(os.path.join(root, name))
+                for entry in os.scandir(path):
+                    try:
+                        if entry.is_dir(follow_symlinks=False):
+                            shutil.rmtree(entry.path, ignore_errors=True)
+                        else:
+                            os.remove(entry.path)
+                    except Exception:
+                        pass
             except Exception:
                 pass
 
+        # Clear temp folders
+        clear_dir(tempfile.gettempdir())
+        clear_dir(r"C:\Windows\Temp")
+        clear_dir(os.path.expandvars(r"%windir%\Prefetch"))
+
+        # Clear GameLoop shader cache
         try:
-            for folder in os.listdir(tempfile.gettempdir()):
-                folder_path = os.path.join(tempfile.gettempdir(), folder)
-                if folder_path != base_path:
-                    if os.path.isdir(folder_path):
-                        shutil.rmtree(folder_path, ignore_errors=True)
-                    else:
-                        try:
-                            os.remove(folder_path)
-                        except Exception:
-                            pass
+            gameloop_ui_path = self.get_local_reg('InstallPath', path='UI')
+            if gameloop_ui_path:
+                clear_dir(os.path.join(gameloop_ui_path, 'ShaderCache'))
         except Exception:
             pass
 
-        clear_files(r"C:\Windows\Temp")
-        clear_files(os.path.expandvars(r'%windir%\Prefetch'))
-        gameloop_ui_path = self.get_local_reg('InstallPath', path='UI')
-        clear_files(os.path.join(gameloop_ui_path, 'ShaderCache'))
+        # Flush standby memory using RAMMap-style registry trick
+        try:
+            subprocess.run(
+                ["powershell", "-Command",
+                 "[System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers()"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+        except Exception:
+            pass
+
+        # Empty working sets of background processes
+        try:
+            subprocess.run(
+                ["powershell", "-Command",
+                 "Get-Process | Where-Object {$_.WorkingSet -gt 50MB} | ForEach-Object { $_.MinWorkingSet = 1MB }"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10
+            )
+        except Exception:
+            pass
+
+        # Disable Windows Search indexing temporarily for gaming
+        try:
+            subprocess.run(["sc", "stop", "WSearch"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
+        # Clear DNS cache
+        subprocess.run(["ipconfig", "/flushdns"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
 
         return True
-
-    def gameloop_settings(self):
-        """
-        Generates the game loop settings based on the system's hardware specifications.
-        """
-
-        def make_scale(value, low=False):
-            for version_key in self.pubg_versions.keys():
-                content_scale_key = f"{version_key}_ContentScale"
-                render_quality_key = f"{version_key}_RenderQuality"
-                fps_level_key = f"{version_key}_FPSLevel"
-
-                reg_content_scale = self.get_reg(content_scale_key)
-                if reg_content_scale is not None:
-                    self.set_dword(content_scale_key, value)
-
-                reg_fps_level = self.get_reg(fps_level_key)
-                if reg_fps_level is not None:
-                    self.set_dword(fps_level_key, 0)
-
-                reg_render_quality = self.get_reg(render_quality_key)
-                if reg_render_quality is not None:
-                    render_value = value
-                    if low:
-                        # value = 0
-                        render_value = 2
-                    elif value == 1:
-                        render_value = 2
-                    self.set_dword(render_quality_key, render_value)
-
-        ram_value = round((int(75) * psutil.virtual_memory().total / (1024 ** 3)) / 100) * 1024
-        ram_value = min(ram_value, (8 * 1024))
-
-        cpu_value = round((int(75) * psutil.cpu_count(logical=False)) / 100)
-        cpu_value = min(cpu_value, 8)
-
-        dc = EnumDisplayDevices(None, 0, 0)
-        settings = EnumDisplaySettings(dc.DeviceName, -1)
-        refresh_rate = settings.DisplayFrequency
-        self.set_dword("VSyncEnabled", 1 if refresh_rate < 89 else 0)
-
-        gpu = GPUtil.getGPUs()[0] if GPUtil.getGPUs() else None
-        if gpu:
-            gpu_memory = int(gpu.memoryTotal / 1024)
-            self.set_dword("SetGraphicsCard", 1)
-            if gpu_memory < 4:
-                self.set_dword("VMDPI", 240)
-                self.set_dword("FxaaQuality", 0)
-
-                if gpu_memory <= 2:
-                    self.set_dword("LocalShaderCacheEnabled", 0)
-                    self.set_dword("ShaderCacheEnabled", 0)
-                    make_scale(1, low=True)
-                else:
-                    self.set_dword("LocalShaderCacheEnabled", 1)
-                    self.set_dword("ShaderCacheEnabled", 1)
-                    make_scale(1)
-
-            elif gpu_memory < 8 and cpu_value <= 4:
-                self.set_dword("LocalShaderCacheEnabled", 1)
-                self.set_dword("ShaderCacheEnabled", 1)
-                self.set_dword("VMDPI", 480)
-                self.set_dword("FxaaQuality", 2 if cpu_value == 4 else 1)
-                make_scale(1)
-            else:
-                self.set_dword("LocalShaderCacheEnabled", 1)
-                self.set_dword("ShaderCacheEnabled", 1)
-                self.set_dword("VMDPI", 480)
-                self.set_dword("FxaaQuality", 2)
-                make_scale(2)
-
-            self.set_dword("GraphicsCardEnabled", 1)
-
-        else:
-            self.set_dword("GraphicsCardEnabled", 0)
-            self.set_dword("LocalShaderCacheEnabled", 0)
-            self.set_dword("ShaderCacheEnabled", 0)
-            self.set_dword("VMDPI", 240)
-            self.set_dword("FxaaQuality", 0)
-            make_scale(1, low=True)
-
-        self.set_dword("ForceDirectX", 1)
-        self.set_dword("RenderOptimizeEnabled", 1)
-        self.set_dword("AdbDisable", 0)
-        self.set_dword("VMMemorySizeInMB", ram_value)
-        self.set_dword("VMCpuCount", cpu_value)
 
     def add_to_windows_defender_exclusion(self):
         """
@@ -296,90 +233,83 @@ class Optimizer(Registry):
             self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
 
     def apply_latency_tweaks(self):
-        """
-        Apply Windows latency tweaks for smoother 120 FPS gameplay.
-        """
-        commands = [
-            [
-                'reg', 'ADD',
-                r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile',
-                '/v', 'NetworkThrottlingIndex',
-                '/t', 'REG_DWORD',
-                '/d', '0xffffffff',
-                '/f'
-            ],
-            [
-                'reg', 'ADD',
-                r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile',
-                '/v', 'SystemResponsiveness',
-                '/t', 'REG_DWORD',
-                '/d', '0',
-                '/f'
-            ],
-            [
-                'reg', 'ADD',
-                r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games',
-                '/v', 'GPU Priority',
-                '/t', 'REG_DWORD',
-                '/d', '8',
-                '/f'
-            ],
-            [
-                'reg', 'ADD',
-                r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games',
-                '/v', 'Priority',
-                '/t', 'REG_DWORD',
-                '/d', '6',
-                '/f'
-            ],
-            [
-                'reg', 'ADD',
-                r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games',
-                '/v', 'Scheduling Category',
-                '/t', 'REG_SZ',
-                '/d', 'High',
-                '/f'
-            ],
-            [
-                'reg', 'ADD',
-                r'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games',
-                '/v', 'SFIO Priority',
-                '/t', 'REG_SZ',
-                '/d', 'High',
-                '/f'
-            ],
-            [
-                'reg', 'ADD',
-                r'HKCU\System\GameConfigStore',
-                '/v', 'GameDVR_Enabled',
-                '/t', 'REG_DWORD',
-                '/d', '0',
-                '/f'
-            ],
-            [
-                'reg', 'ADD',
-                r'HKCU\Software\Microsoft\Windows\CurrentVersion\GameDVR',
-                '/v', 'AppCaptureEnabled',
-                '/t', 'REG_DWORD',
-                '/d', '0',
-                '/f'
-            ],
-            [
-                'reg', 'ADD',
-                r'HKLM\SOFTWARE\Policies\Microsoft\Windows\GameDVR',
-                '/v', 'AllowGameDVR',
-                '/t', 'REG_DWORD',
-                '/d', '0',
-                '/f'
-            ],
+        import subprocess
+        import winreg
+
+        reg_tweaks = [
+            (r"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile",
+             "NetworkThrottlingIndex", "REG_DWORD", "0xffffffff"),
+            (r"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile",
+             "SystemResponsiveness", "REG_DWORD", "0"),
+            (r"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games",
+             "GPU Priority", "REG_DWORD", "8"),
+            (r"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games",
+             "Priority", "REG_DWORD", "6"),
+            (r"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games",
+             "Scheduling Category", "REG_SZ", "High"),
+            (r"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games",
+             "SFIO Priority", "REG_SZ", "High"),
+            (r"HKCU\System\GameConfigStore", "GameDVR_Enabled", "REG_DWORD", "0"),
+            (r"HKCU\Software\Microsoft\Windows\CurrentVersion\GameDVR", "AppCaptureEnabled", "REG_DWORD", "0"),
+            (r"HKLM\SOFTWARE\Policies\Microsoft\Windows\GameDVR", "AllowGameDVR", "REG_DWORD", "0"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling",
+             "PowerThrottlingOff", "REG_DWORD", "1"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Services\W32Time\Parameters",
+             "Type", "REG_SZ", "NTP"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters",
+             "TcpAckFrequency", "REG_DWORD", "1"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters",
+             "TCPNoDelay", "REG_DWORD", "1"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management",
+             "LargeSystemCache", "REG_DWORD", "0"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters",
+             "EnablePrefetcher", "REG_DWORD", "0"),
+            (r"HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters",
+             "EnableSuperfetch", "REG_DWORD", "0"),
         ]
 
         try:
-            for command in commands:
-                subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            for key, name, type_, value in reg_tweaks:
+                subprocess.run(
+                    ['reg', 'ADD', key, '/v', name, '/t', type_, '/d', value, '/f'],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                )
+
+            services_to_disable = [
+                "SysMain",
+                "WSearch",
+                "DiagTrack",
+                "dmwappushservice",
+                "lfsvc",
+                "MapsBroker",
+                "XblAuthManager",
+                "XblGameSave",
+                "XboxNetApiSvc",
+            ]
+
+            for service in services_to_disable:
+                subprocess.run(["sc", "config", service, "start=", "disabled"],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(["sc", "stop", service],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+            subprocess.run(
+                ["powercfg", "/setactive", "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+
+            subprocess.run(
+                ["powercfg", "-setacvalueindex", "SCHEME_CURRENT",
+                 "54533251-82be-4824-96c1-47b60b740d00",
+                 "0cc5b647-c1df-4637-891a-dec35c318583", "100"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+            subprocess.run(["powercfg", "-SetActive", "SCHEME_CURRENT"],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
             return True
         except Exception as e:
-            self.logger.error(f"Exception occurred: {str(e)}", exc_info=True)
+            self.logger.error(f"Latency tweaks error: {str(e)}", exc_info=True)
             return False
 
     def force_gameloop_resource_allocation(self, aggressive: bool = False, target_ram_gb: int | None = None,
@@ -390,29 +320,21 @@ class Optimizer(Registry):
         Returns:
             tuple[int, int]: Allocated RAM in MB and CPU core count.
         """
-        total_ram_gb = psutil.virtual_memory().total / (1024 ** 3)
-        if target_ram_gb is None:
-            target_ram_gb = 15 if not aggressive else 64
-
-        if aggressive:
-            ram_fraction = 0.95
-            max_ram_gb = target_ram_gb
-            ram_value = round(total_ram_gb * ram_fraction) * 1024
-            ram_value = max(2048, min(ram_value, max_ram_gb * 1024))
+        total_ram_mb = int(psutil.virtual_memory().total / (1024 ** 2))
+        if target_ram_gb is not None:
+            ram_value = max(2048, int(target_ram_gb) * 1024)
+        elif aggressive:
+            ram_value = max(2048, total_ram_mb - 2048)
         else:
-            ram_value = max(2048, min(int(target_ram_gb) * 1024, int(total_ram_gb) * 1024))
+            ram_value = max(2048, min(int(total_ram_mb * 0.75), total_ram_mb - 2048))
 
-        total_cores = psutil.cpu_count(logical=False) or psutil.cpu_count(logical=True) or 1
-        if target_cores is None:
-            target_cores = 12 if not aggressive else 32
-
-        if aggressive:
-            cpu_fraction = 0.95
-            max_cores = target_cores
-            cpu_value = max(1, round(total_cores * cpu_fraction))
-            cpu_value = min(cpu_value, max_cores)
+        total_cores = psutil.cpu_count(logical=True) or 1
+        if target_cores is not None:
+            cpu_value = max(1, min(int(target_cores), total_cores))
+        elif aggressive:
+            cpu_value = max(1, min(total_cores, 12))
         else:
-            cpu_value = max(1, min(int(target_cores), int(total_cores)))
+            cpu_value = max(1, min(max(2, int(total_cores * 0.75)), 12))
 
         self.set_dword("VMMemorySizeInMB", ram_value)
         self.set_dword("VMCpuCount", cpu_value)
@@ -429,6 +351,7 @@ class Optimizer(Registry):
         priority_map = {
             "high": getattr(psutil, "HIGH_PRIORITY_CLASS", None),
             "realtime": getattr(psutil, "REALTIME_PRIORITY_CLASS", None),
+            "above_normal": getattr(psutil, "ABOVE_NORMAL_PRIORITY_CLASS", None),
         }
         priority_class = priority_map.get(str(priority).lower())
         if priority_class is None:
@@ -438,10 +361,7 @@ class Optimizer(Registry):
 
         cpu_cores = psutil.cpu_count(logical=True) or 1
         if target_cores is None:
-            if str(priority).lower() in {"high", "realtime"}:
-                target_cores = 12
-            else:
-                target_cores = cpu_cores
+            target_cores = cpu_cores if str(priority).lower() == "realtime" else min(cpu_cores, 12)
         affinity_cores = max(1, min(int(target_cores), int(cpu_cores)))
         cpu_affinity = list(range(affinity_cores))
         boosted = 0
@@ -469,6 +389,119 @@ class Optimizer(Registry):
                 continue
 
         return boosted, applied_requested
+
+    def apply_full_resource_boost(self):
+        """
+        Gives Gameloop everything: max RAM, max CPU cores, real-time priority,
+        and forces GPU preference via registry.
+        """
+        import psutil
+        import subprocess
+
+        total_ram_mb = int(psutil.virtual_memory().total / (1024 ** 2))
+        gameloop_ram = max(2048, total_ram_mb - 2048)
+        self.set_dword("VMMemorySizeInMB", gameloop_ram)
+
+        total_cores = psutil.cpu_count(logical=True) or 4
+        gameloop_cores = min(total_cores, 12)
+        self.set_dword("VMCpuCount", gameloop_cores)
+
+        self.set_dword("RenderOptimizeEnabled", 0)
+        self.set_dword("GraphicsCardEnabled", 1)
+        self.set_dword("SetGraphicsCard", 1)
+        self.set_dword("ForceDirectX", 1)
+
+        boosted, _ = self.boost_gameloop_priority(priority="realtime", target_cores=total_cores)
+
+        subprocess.run(
+            ["powercfg", "/setactive", "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        subprocess.run(
+            ["powercfg", "-setacvalueindex", "SCHEME_CURRENT",
+             "54533251-82be-4824-96c1-47b60b740d00",
+             "893dee8e-2bef-41e0-89c6-b55d0929964c", "100"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        subprocess.run(
+            ["powercfg", "-setacvalueindex", "SCHEME_CURRENT",
+             "54533251-82be-4824-96c1-47b60b740d00",
+             "0cc5b647-c1df-4637-891a-dec35c318583", "100"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        subprocess.run(
+            ["powercfg", "-SetActive", "SCHEME_CURRENT"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+
+        for exe in ['AndroidEmulator.exe', 'AndroidEmulatorEn.exe', 'AndroidEmulatorEx.exe', 'aow_exe.exe']:
+            key = (r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+                   rf"\Image File Execution Options\{exe}\PerfOptions")
+            subprocess.run(
+                ['reg', 'ADD', key, '/v', 'IoPriority', '/t', 'REG_DWORD', '/d', '3', '/f'],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+            subprocess.run(
+                ['reg', 'ADD', key, '/v', 'CpuPriorityClass', '/t', 'REG_DWORD', '/d', '3', '/f'],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+
+        return gameloop_ram, gameloop_cores, boosted
+
+    def apply_fps_stabilizer(self):
+        """
+        Applies all tweaks to ensure FPS never drops:
+        - Disables background processes
+        - Sets GameLoop affinity to performance cores
+        - Disables Windows visual effects
+        - Prevents CPU frequency scaling
+        """
+        import psutil
+        import subprocess
+
+        visual_effects_commands = [
+            ['reg', 'ADD', r'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects',
+             '/v', 'VisualFXSetting', '/t', 'REG_DWORD', '/d', '2', '/f'],
+            ['reg', 'ADD', r'HKCU\Control Panel\Desktop',
+             '/v', 'UserPreferencesMask', '/t', 'REG_BINARY', '/d', '9012038010000000', '/f'],
+            ['reg', 'ADD', r'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize',
+             '/v', 'EnableTransparency', '/t', 'REG_DWORD', '/d', '0', '/f'],
+        ]
+
+        for cmd in visual_effects_commands:
+            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        subprocess.run(
+            ["powercfg", "-setacvalueindex", "SCHEME_CURRENT",
+             "54533251-82be-4824-96c1-47b60b740d00",
+             "893dee8e-2bef-41e0-89c6-b55d0929964c", "100"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+
+        fps_killers = [
+            "SearchIndexer.exe", "MsMpEng.exe",
+            "OneDrive.exe", "Teams.exe", "Slack.exe",
+            "discord.exe",
+            "chrome.exe", "msedge.exe",
+        ]
+        for proc_name in fps_killers:
+            try:
+                subprocess.run(["taskkill", "/F", "/IM", proc_name],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                pass
+
+        try:
+            import ctypes
+            ntdll = ctypes.WinDLL('ntdll.dll')
+            ntdll.NtSetTimerResolution(5000, True, ctypes.byref(ctypes.c_ulong()))
+        except Exception:
+            pass
+
+        subprocess.run(["powercfg", "-SetActive", "SCHEME_CURRENT"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        return True
 
     def optimize_for_nvidia(self):
         def change_nvidia_profile():
@@ -1005,6 +1038,146 @@ class Game(Optimizer):
                 after = after[:1].replace(after[:1], fps_value) + after[1:]
                 self.active_sav_content = before + _ + after
 
+    def set_fps_experimental(self, val: str) -> bool:
+        """
+        Try to unlock FPS beyond 120 using undocumented values.
+        """
+        fps_mapping = {
+            "Low": b"\x02",
+            "Medium": b"\x03",
+            "High": b"\x04",
+            "Ultra": b"\x05",
+            "Extreme": b"\x06",
+            "Extreme+": b"\x07",
+            "Ultra Extreme": b"\x08",
+            "144fps [EXP]": b"\x09",
+            "165fps [EXP]": b"\x0A",
+            "200fps [EXP]": b"\x0B",
+        }
+        fps_value = fps_mapping.get(val)
+        if fps_value is None:
+            return False
+
+        fps_properties = ["FPSLevel", "BattleFPS", "LobbyFPS"]
+        for prop in fps_properties:
+            header = (
+                prop.encode('utf-8') +
+                b'\x00\x0c\x00\x00\x00IntProperty\x00'
+                b'\x04\x00\x00\x00\x00\x00\x00\x00\x00'
+            )
+            before, sep, after = self.active_sav_content.partition(header)
+            if sep:
+                after = fps_value + after[1:]
+                self.active_sav_content = before + sep + after
+        return True
+
+    def set_high_dpi_rendering(self, dpi=560):
+        """Increase emulator DPI for sharper game rendering."""
+        valid_dpis = [240, 320, 480, 560, 640]
+        dpi = min(valid_dpis, key=lambda x: abs(x - int(dpi)))
+        self.set_dword("VMDPI", dpi)
+        self.set_dword("HardwareAcceleration", 1)
+        self.set_dword("SoftwareDecoder", 0)
+        self.set_dword("RenderOptimizeEnabled", 0)
+        return dpi
+
+    def push_engine_ini(self, mode="competitive"):
+        """
+        Push optimized Engine.ini for headshot clarity and visibility.
+        """
+        engine_ini_path = (
+            f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/"
+            f"ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/Engine.ini"
+        )
+
+        if mode == "competitive":
+            content = """\
+[SystemSettings]
+; === EX Tool Competitive Engine Settings ===
+r.MipMapLODBias=-2
+r.SkeletalMeshLODBias=-2
+r.StaticMeshLODBias=-1
+r.ViewDistanceScale=4
+r.MaxAnisotropy=16
+r.TemporalAACurrentFrameWeight=1
+r.TemporalAASamples=1
+r.Streaming.PoolSize=3000
+r.DefaultFeature.MotionBlur=False
+r.Fog=0
+r.VolumetricFog=0
+r.TonemapperGamma=2.2
+r.Tonemapper.Sharpen=1.5
+foliage.DensityScale=0.3
+r.DepthOfFieldQuality=0
+"""
+        else:
+            content = """\
+[SystemSettings]
+; === EX Tool Balanced Engine Settings ===
+r.MipMapLODBias=-1
+r.SkeletalMeshLODBias=-1
+r.StaticMeshLODBias=0
+r.ViewDistanceScale=3
+r.MaxAnisotropy=8
+r.TemporalAACurrentFrameWeight=0.5
+r.Streaming.PoolSize=2048
+r.DefaultFeature.MotionBlur=False
+r.Fog=1
+foliage.DensityScale=0.6
+"""
+
+        local_path = self.resource_path(r'assets\engine_custom.ini')
+        with open(local_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+
+        self.adb.sync.push(local_path, engine_ini_path)
+        return True
+
+    def reset_engine_ini(self):
+        """Reset Engine.ini to default."""
+        engine_ini_path = (
+            f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/"
+            f"ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/Engine.ini"
+        )
+        local_path = self.resource_path(r'assets\engine_custom.ini')
+        with open(local_path, 'w', encoding='utf-8') as f:
+            f.write("[SystemSettings]\n; Reset by EX Tool\n")
+        self.adb.sync.push(local_path, engine_ini_path)
+        return True
+
+    def push_game_user_settings(self, resolution_x=1280, resolution_y=720, fps_limit=120):
+        """
+        Optimize GameUserSettings.ini for PC GameLoop.
+        """
+        path = (
+            f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/"
+            f"ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/GameUserSettings.ini"
+        )
+
+        content = f"""\
+[/Script/Engine.GameUserSettings]
+bUseVSync=False
+bUseDynamicResolution=False
+ResolutionSizeX={resolution_x}
+ResolutionSizeY={resolution_y}
+LastUserConfirmedResolutionSizeX={resolution_x}
+LastUserConfirmedResolutionSizeY={resolution_y}
+FullscreenMode=1
+LastConfirmedFullscreenMode=1
+PreferredFullscreenMode=1
+FrameRateLimit={float(fps_limit):.6f}
+DefaultFeature.AntiAliasing=4
+DefaultFeature.AmbientOcclusion=False
+DefaultFeature.MotionBlur=False
+"""
+
+        local_path = self.resource_path(r'assets\game_user_settings.ini')
+        with open(local_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+
+        self.adb.sync.push(local_path, path)
+        return True
+
     def read_hex(self, name):
         """
         Reads the value of the specified property from the Active.sav file.
@@ -1051,6 +1224,9 @@ class Game(Optimizer):
             b"\x06": "Extreme",
             b"\x07": "Extreme+",
             b"\x08": "Ultra Extreme",
+            b"\x09": "144fps [EXP]",
+            b"\x0A": "165fps [EXP]",
+            b"\x0B": "200fps [EXP]",
         }
         return fps_dict.get(fps_hex, None)
 
@@ -1074,33 +1250,63 @@ class Game(Optimizer):
 
         return shadow_name
 
-    # Todo: Make This Function Working
     def set_shadow(self, value):
         """
-        Sets the shadow value in the Active.sav file.
-        :param value: Shadow value to set ("ON" or "OFF")
-        :return: True if successful, False otherwise
+        Set PUBG shadow preference by editing UserCustom.ini and pushing it via ADB.
         """
-
-        shadow_value = {"ON": 48, "OFF": 49}.get(value)
+        normalized = str(value).strip().lower()
+        shadow_value = {
+            "on": 48,
+            "off": 49,
+            "enable": 48,
+            "disable": 49,
+        }.get(normalized)
         if shadow_value is None:
             return False
-        shadow_values = {"r.UserShadowSwitch": "1", "r.ShadowQuality": "1", "r.Mobile.DynamicObjectShadow": "1",
-                         "r.Shadow.MaxCSMResolution": "1", "r.Shadow.DistanceScale": "1",
-                         "r.Shadow.CSM.MaxMobileCascades": "1"}
+
+        user_custom_ini_path = (
+            f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/ShadowTrackerExtra/"
+            f"ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
+        )
+        local_ini_path = self.resource_path(r"assets\user_custom.ini")
+
+        try:
+            self.adb.sync.pull(user_custom_ini_path, local_ini_path)
+        except Exception:
+            return False
+
+        key_1 = "+CVars=0B572A11181D160E280C1815100D0044"
+        key_2 = "+CVars=0B572C0A1C0B2A11181D160E2A0E100D1A1144"
+        found_1 = False
+        found_2 = False
         lines = []
-        with open(self.resource_path(r"assets\user_custom.ini"), "r") as file:
-            for line in file:
-                if line.strip().startswith("+CVars=0B572A11181D160E280C1815100D0044"):
-                    line = f"+CVars=0B572A11181D160E280C1815100D0044{shadow_value}\n"
-                elif line.strip().startswith("+CVars=0B572C0A1C0B2A11181D160E2A0E100D1A1144"):
-                    line = f"+CVars=0B572C0A1C0B2A11181D160E2A0E100D1A1144{shadow_value}\n"
-                lines.append(line)
 
-        with open(self.resource_path(r"assets\user_custom.ini"), "w") as file:
-            file.writelines(lines)
+        try:
+            with open(local_ini_path, "r", encoding="utf-8", errors="ignore") as file:
+                for line in file:
+                    stripped = line.strip()
+                    if stripped.startswith(key_1):
+                        line = f"{key_1}{shadow_value}\n"
+                        found_1 = True
+                    elif stripped.startswith(key_2):
+                        line = f"{key_2}{shadow_value}\n"
+                        found_2 = True
+                    lines.append(line)
+        except Exception:
+            return False
 
-        return True
+        if not found_1:
+            lines.append(f"{key_1}{shadow_value}\n")
+        if not found_2:
+            lines.append(f"{key_2}{shadow_value}\n")
+
+        try:
+            with open(local_ini_path, "w", encoding="utf-8", errors="ignore") as file:
+                file.writelines(lines)
+            self.adb.sync.push(local_ini_path, user_custom_ini_path)
+            return True
+        except Exception:
+            return False
 
     def get_graphics_style(self):
         """

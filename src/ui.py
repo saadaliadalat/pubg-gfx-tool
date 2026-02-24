@@ -1,1231 +1,829 @@
-# -*- coding: utf-8 -*-
-# QFont\(\)\s+font\d+\.setFamily\(u"Agency FB"\)  to QFont(font_family)
+from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont, QIcon, QPixmap
+from PyQt5.QtWidgets import (
+    QComboBox,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QPushButton,
+    QSizePolicy,
+    QSpacerItem,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
-
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
 from . import resource_path
 from .ui_images import resources_rc
 
+THEME = """
+QMainWindow, QWidget {
+    background-color: #0f0f1a;
+    color: #ffffff;
+    font-family: 'Segoe UI', Arial;
+}
+
+#titleBar {
+    background-color: #1a1a2e;
+    border-bottom: 2px solid #e94560;
+}
+
+QPushButton[role="nav"] {
+    background: transparent;
+    color: #888888;
+    font-size: 13px;
+    font-weight: bold;
+    padding: 8px 20px;
+    border: none;
+    border-bottom: 3px solid transparent;
+}
+QPushButton[role="nav"]:checked {
+    color: #ffffff;
+    border-bottom: 3px solid #e94560;
+}
+QPushButton[role="nav"]:hover {
+    color: #cccccc;
+}
+
+#sectionLabel {
+    color: #e94560;
+    font-size: 14px;
+    font-weight: bold;
+    border-bottom: 1px solid #333355;
+    padding-bottom: 4px;
+}
+
+QPushButton {
+    background-color: #1e1e35;
+    color: #cccccc;
+    border: 1px solid #333355;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 12px;
+    min-height: 35px;
+}
+QPushButton:hover {
+    background-color: #2a2a4a;
+    border-color: #e94560;
+    color: #ffffff;
+}
+QPushButton:checked {
+    background-color: #e94560;
+    color: #ffffff;
+    border-color: #e94560;
+    font-weight: bold;
+}
+QPushButton:disabled {
+    background-color: #111122;
+    color: #444444;
+    border-color: #222233;
+}
+QPushButton:pressed {
+    background-color: #c73652;
+}
+
+#beastBtn {
+    background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #FF0000, stop:1 #FF6600);
+    color: white;
+    font-weight: bold;
+    font-size: 13px;
+    border: none;
+    border-radius: 6px;
+    min-height: 40px;
+}
+#competitiveBtn {
+    background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #00CCFF, stop:1 #0066FF);
+    color: white;
+    font-weight: bold;
+    font-size: 13px;
+    border: none;
+    border-radius: 6px;
+    min-height: 40px;
+}
+#streamerBtn {
+    background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #9933FF, stop:1 #CC33FF);
+    color: white;
+    font-weight: bold;
+    font-size: 13px;
+    border: none;
+    border-radius: 6px;
+    min-height: 40px;
+}
+
+#connectBtn {
+    background-color: #1a4a1a;
+    border: 1px solid #2a7a2a;
+    color: #aaffaa;
+    min-height: 40px;
+    font-size: 13px;
+}
+#connectBtn:checked {
+    background-color: #2a7a2a;
+    color: #ffffff;
+}
+
+#submitBtn {
+    background-color: #e94560;
+    color: white;
+    font-weight: bold;
+    font-size: 13px;
+    min-height: 40px;
+    border: none;
+}
+#submitBtn:hover { background-color: #ff5577; }
+#submitBtn:pressed { background-color: #c73652; }
+
+#forceCloseBtn {
+    background-color: #4a1a1a;
+    border: 1px solid #7a2a2a;
+    color: #ffaaaa;
+    min-height: 45px;
+    font-size: 13px;
+    font-weight: bold;
+}
+#forceCloseBtn:hover {
+    background-color: #7a2a2a;
+    color: #ffffff;
+}
+
+QComboBox {
+    background-color: #1e1e35;
+    color: #cccccc;
+    border: 1px solid #333355;
+    border-radius: 4px;
+    padding: 6px 10px;
+    min-height: 30px;
+}
+QComboBox::drop-down {
+    border: none;
+    background: #e94560;
+    width: 25px;
+    border-radius: 0 4px 4px 0;
+}
+QComboBox QAbstractItemView {
+    background-color: #1a1a2e;
+    border: 1px solid #333355;
+    color: #cccccc;
+    selection-background-color: #e94560;
+}
+
+#statusBar {
+    background-color: #1a1a2e;
+    border-top: 1px solid #333355;
+    color: #888888;
+    padding: 5px 10px;
+    font-size: 11px;
+}
+
+#sectionBox {
+    background-color: #14142a;
+    border: 1px solid #222244;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+QPushButton[role="style"] {
+    background-color: #1e1e35;
+    border: 2px solid #333355;
+    border-radius: 6px;
+    padding: 4px;
+    min-width: 100px;
+    min-height: 90px;
+}
+QPushButton[role="style"]:checked {
+    border: 2px solid #e94560;
+}
+
+QLabel#connection_banner_label {
+    background-color: #4a2d00;
+    border: 1px solid #aa6600;
+    color: #ffd080;
+    border-radius: 6px;
+    padding: 8px;
+    font-weight: bold;
+}
+"""
+
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
+    def setupUi(self, MainWindow: QMainWindow):
         if not MainWindow.objectName():
-            MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1310, 739)
-        MainWindow.setMinimumSize(QSize(1310, 739))
-        MainWindow.setMaximumSize(QSize(1310, 739))
-        font_id = QFontDatabase.addApplicationFont(resource_path(r"assets\fonts\AGENCYR.TTF"))
-        font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
-        font = QFont(font_family)
-        font.setBold(True)
-        font.setWeight(75)
+            MainWindow.setObjectName("MainWindow")
+        MainWindow.setMinimumSize(1280, 800)
+        MainWindow.resize(1280, 800)
+        MainWindow.setStyleSheet(THEME)
+
+        font = QFont("Segoe UI", 10)
         MainWindow.setFont(font)
+
         icon = QIcon()
-        icon.addFile(resource_path(r"assets\icons\logo.ico"), QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(resource_path(r"assets\icons\logo.ico"))
         MainWindow.setWindowIcon(icon)
-        MainWindow.setStyleSheet(u"""
-                QMainWindow {
-                    background-color: #0a0c0e;
-                }
-                
-                QMenu {
-                    background-color: #1a1c1e;
-                    color: #e0e0e0;
-                    border: 1px solid #2d3135;
-                }
-                QMenu::item:selected {
-                    background-color: #1eb980;
-                    color: #ffffff;
-                }
 
-                QComboBox {
-                    background-color: rgba(30, 34, 38, 180);
-                    border: 1px solid rgba(255, 255, 255, 20);
-                    border-radius: 6px;
-                    padding-left: 10px;
-                    color: #ffffff;
-                    min-height: 35px;
-                }
-                QComboBox:hover {
-                    border: 1px solid #1eb980;
-                }
-                QComboBox::drop-down {
-                    border: 0px;
-                }
-                QComboBox QAbstractItemView {
-                    background-color: #1a1c1e;
-                    color: #e0e0e0;
-                    selection-background-color: #1eb980;
-                    border: 1px solid #2d3135;
-                    outline: 0px;
-                }
-
-                QPushButton {
-                    background-color: rgba(45, 49, 53, 150);
-                    border: 1px solid rgba(255, 255, 255, 15);
-                    border-radius: 8px;
-                    color: #d1d1d1;
-                    padding: 8px 15px;
-                    text-align: center;
-                }
-                QPushButton:hover {
-                    background-color: rgba(60, 65, 70, 200);
-                    border: 1px solid #1eb980;
-                    color: #ffffff;
-                }
-                QPushButton:checked {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
-                                              stop:0 #1eb980, stop:1 #0b8043);
-                    border: 1px solid #2af598;
-                    color: #ffffff;
-                    font-weight: bold;
-                }
-                QPushButton:pressed {
-                    background-color: #0b8043;
-                    border: 1px solid #2af598;
-                }
-                QPushButton:disabled {
-                    background-color: rgba(30, 30, 30, 100);
-                    color: #555555;
-                    border: 1px solid transparent;
-                }
-
-                QFrame#frame {
-                    background-color: rgba(14, 18, 22, 220);
-                    border: 1px solid rgba(255, 255, 255, 10);
-                    border-radius: 15px;
-                }
-
-                QFrame#GraphicsFrame,
-                QFrame#FramerateFrame,
-                QFrame#StyleFrame,
-                QFrame#ShadowFrame,
-                QFrame#ResolutionkrFrame {
-                    background-color: rgba(25, 30, 35, 160);
-                    border: 1px solid rgba(255, 255, 255, 8);
-                    border-radius: 12px;
-                }
-
-                QLabel {
-                    color: #e0e0e0;
-                }
-                QLabel#graphics_label,
-                QLabel#fps_label,
-                QLabel#style_label,
-                QLabel#shadow_label,
-                QLabel#resolution_label {
-                    color: #1eb980;
-                    font-weight: bold;
-                    letter-spacing: 1px;
-                }
-
-                QLabel#appname_label {
-                    color: #ffffff;
-                    font-size: 24px;
-                    font-weight: bold;
-                    letter-spacing: 2px;
-                }
-
-                QScrollBar:vertical {
-                    border: none;
-                    background: #1a1c1e;
-                    width: 10px;
-                    border-radius: 5px;
-                }
-                QScrollBar::handle:vertical {
-                    background: #2d3135;
-                    min-height: 20px;
-                    border-radius: 5px;
-                }
-                QScrollBar::handle:vertical:hover {
-                    background: #1eb980;
-                }
-            """)
         self.centralwidget = QWidget(MainWindow)
-        self.centralwidget.setObjectName(u"centralwidget")
-        self.appbackground = QLabel(self.centralwidget)
-        self.appbackground.setObjectName(u"appbackground")
-        self.appbackground.setEnabled(True)
-        self.appbackground.setGeometry(QRect(0, 0, 1311, 741))
-        self.appbackground.setStyleSheet(u"border-image: url(:/Graphics/bg.png);")
-        self.stackedWidget = QStackedWidget(self.centralwidget)
-        self.stackedWidget.setObjectName(u"stackedWidget")
-        self.stackedWidget.setGeometry(QRect(29, 80, 1081, 651))
-        self.stackedWidget.setStyleSheet(u"QStackedWidget { background-color: transparent; }")
-        self.gfx_page = QWidget()
-        self.gfx_page.setObjectName(u"gfx_page")
-        self.gfx_page_background = QLabel(self.gfx_page)
-        self.gfx_page_background.setObjectName(u"gfx_page_background")
-        self.gfx_page_background.setEnabled(True)
-        self.gfx_page_background.setGeometry(QRect(-30, -80, 1311, 741))
-        self.gfx_page_background.setStyleSheet(u"border-image: url(:/Graphics/bg.png);")
-        self.submit_gfx_btn = QPushButton(self.gfx_page)
-        self.submit_gfx_btn.setObjectName(u"submit_gfx_btn")
-        self.submit_gfx_btn.setGeometry(QRect(960, 580, 121, 51))
-        font1 = QFont(font_family)
-        font1.setPointSize(20)
-        font1.setBold(True)
-        font1.setItalic(False)
-        font1.setUnderline(False)
-        font1.setWeight(75)
-        self.submit_gfx_btn.setFont(font1)
-        self.submit_gfx_btn.setStyleSheet(u"QPushButton {\n"
-                                          "                                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, \n"
-                                          "                                                          stop:0 #f0d000, stop:1 #c0a000);\n"
-                                          "                                border: 1px solid #ffd700;\n"
-                                          "                                border-radius: 10px;\n"
-                                          "                                color: #000000;\n"
-                                          "                                font-weight: bold;\n"
-                                          "                                }\n"
-                                          "\n"
-                                          "                                QPushButton:hover {\n"
-                                          "                                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, \n"
-                                          "                                                          stop:0 #ffea00, stop:1 #d4af37);\n"
-                                          "                                border: 1px solid #ffffff;\n"
-                                          "                                }\n"
-                                          "\n"
-                                          "                                QPushButton:pressed {\n"
-                                          "                                background-color: #b8860b;\n"
-                                          "                                border: 2px solid #000000;\n"
-                                          "                                }\n"
-                                          "                                QPushButton:disabled {\n"
-                                          "                                color: rgba(0, 0, 0, 100);\n"
-                                          "                                background-color: rgba(240, 208, 0, 80);\n"
-                                          "                                }\n"
-                                          "                            ")
-        self.connect_gameloop_btn = QPushButton(self.gfx_page)
-        self.connect_gameloop_btn.setObjectName(u"connect_gameloop_btn")
-        self.connect_gameloop_btn.setEnabled(True)
-        self.connect_gameloop_btn.setGeometry(QRect(710, 580, 241, 51))
-        font2 = QFont(font_family)
-        font2.setPointSize(20)
-        font2.setBold(True)
-        font2.setWeight(75)
-        self.connect_gameloop_btn.setFont(font2)
-        self.connect_gameloop_btn.setStyleSheet(u"QPushButton {\n"
-                                                 "                                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, \n"
-                                                 "                                                          stop:0 #222222, stop:1 #111111);\n"
-                                                 "                                border: 1px solid #1eb980;\n"
-                                                 "                                border-radius: 10px;\n"
-                                                 "                                color: #1eb980;\n"
-                                                 "                                }\n"
-                                                 "                                QPushButton:checked {\n"
-                                                 "                                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, \n"
-                                                 "                                                          stop:0 #1eb980, stop:1 #0b8043);\n"
-                                                 "                                color: #ffffff;\n"
-                                                 "                                }\n"
-                                                 "                                QPushButton:hover {\n"
-                                                 "                                border: 1px solid #2af598;\n"
-                                                 "                                color: #2af598;\n"
-                                                 "                                }\n"
-                                                 "                            ")
-        self.connect_gameloop_btn.setCheckable(True)
-        self.PubgchooseFrame = QFrame(self.gfx_page)
-        self.PubgchooseFrame.setObjectName(u"PubgchooseFrame")
-        self.PubgchooseFrame.setGeometry(QRect(450, 570, 261, 90))
-        self.PubgchooseFrame.setFrameShape(QFrame.NoFrame)
-        self.pubgchoose_btn = QPushButton(self.PubgchooseFrame)
-        self.pubgchoose_btn.setObjectName(u"pubgchoose_btn")
-        self.pubgchoose_btn.setGeometry(QRect(180, 10, 71, 51))
-        sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pubgchoose_btn.sizePolicy().hasHeightForWidth())
-        self.pubgchoose_btn.setSizePolicy(sizePolicy)
-        font3 = QFont(font_family)
-        font3.setPointSize(20)
-        font3.setBold(True)
-        font3.setWeight(75)
-        font3.setStyleStrategy(QFont.PreferAntialias)
-        self.pubgchoose_btn.setFont(font3)
-        self.pubgchoose_btn.setStyleSheet(u"")
-        self.pubgchoose_btn.setFlat(True)
-        self.pubgchoose_dropdown = QComboBox(self.PubgchooseFrame)
-        self.pubgchoose_dropdown.setObjectName(u"pubgchoose_dropdown")
-        self.pubgchoose_dropdown.setGeometry(QRect(0, 10, 171, 51))
-        font4 = QFont(font_family)
-        font4.setPointSize(13)
-        font4.setBold(True)
-        font4.setWeight(75)
-        self.pubgchoose_dropdown.setFont(font4)
-        self.pubgchoose_dropdown.setStyleSheet(u"")
-        self.pubgchoose_label = QLabel(self.PubgchooseFrame)
-        self.pubgchoose_label.setObjectName(u"pubgchoose_label")
-        self.pubgchoose_label.setGeometry(QRect(0, 59, 251, 21))
-        font5 = QFont(font_family)
-        font5.setPointSize(10)
-        font5.setBold(True)
-        font5.setWeight(75)
-        self.pubgchoose_label.setFont(font5)
-        self.pubgchoose_label.setStyleSheet(u"color: rgb(255, 255, 255);\n"
-                                            "                                    text-align: center;\n"
-                                            "                                    padding-top: -30px;\n"
-                                            "                                ")
-        self.frame = QFrame(self.gfx_page)
-        self.frame.setObjectName(u"frame")
-        self.frame.setGeometry(QRect(0, 0, 1081, 581))
-        self.frame.setMinimumSize(QSize(1081, 581))
-        self.frame.setMaximumSize(QSize(1081, 581))
-        self.frame.setFrameShape(QFrame.NoFrame)
-        self.gridLayout = QGridLayout(self.frame)
-        self.gridLayout.setSpacing(8)
-        self.gridLayout.setObjectName(u"gridLayout")
-        self.gridLayout.setContentsMargins(8, 8, 8, 8)
-        self.GraphicsFrame = QFrame(self.frame)
-        self.GraphicsFrame.setObjectName(u"GraphicsFrame")
-        self.GraphicsFrame.setMinimumSize(QSize(1, 120))
-        self.GraphicsFrame.setMaximumSize(QSize(99999, 999999))
-        self.GraphicsFrame.setStyleSheet(u"")
-        self.graphics_label = QLabel(self.GraphicsFrame)
-        self.graphics_label.setObjectName(u"graphics_label")
-        self.graphics_label.setGeometry(QRect(11, 36, 180, 37))
-        font6 = QFont(font_family)
-        font6.setPointSize(23)
-        font6.setBold(True)
-        font6.setWeight(75)
-        self.graphics_label.setFont(font6)
-        self.graphics_label.setStyleSheet(u"\n"
-                                          "\n"
-                                          "                                    color: #fff;\n"
-                                          "                                ")
-        self.layoutWidget = QWidget(self.GraphicsFrame)
-        self.layoutWidget.setObjectName(u"layoutWidget")
-        self.layoutWidget.setGeometry(QRect(11, 74, 900, 43))
-        self.GraphicsLayout = QHBoxLayout(self.layoutWidget)
-        self.GraphicsLayout.setSpacing(10)
-        self.GraphicsLayout.setObjectName(u"GraphicsLayout")
-        self.GraphicsLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
-        self.GraphicsLayout.setContentsMargins(8, 4, 8, 4)
-        self.smooth_graphics_btn = QPushButton(self.layoutWidget)
-        self.smooth_graphics_btn.setObjectName(u"smooth_graphics_btn")
-        sizePolicy.setHeightForWidth(self.smooth_graphics_btn.sizePolicy().hasHeightForWidth())
-        self.smooth_graphics_btn.setSizePolicy(sizePolicy)
-        self.smooth_graphics_btn.setMinimumSize(QSize(141, 41))
-        self.smooth_graphics_btn.setMaximumSize(QSize(141, 41))
-        self.smooth_graphics_btn.setFont(font3)
-        self.smooth_graphics_btn.setStyleSheet(u"")
-        self.smooth_graphics_btn.setCheckable(True)
-        self.smooth_graphics_btn.setFlat(True)
+        self.centralwidget.setObjectName("centralwidget")
+        self.rootLayout = QVBoxLayout(self.centralwidget)
+        self.rootLayout.setContentsMargins(0, 0, 0, 0)
+        self.rootLayout.setSpacing(0)
 
-        self.GraphicsLayout.addWidget(self.smooth_graphics_btn)
+        self._build_title_bar()
+        self._build_pages()
+        self._build_status_bar()
 
-        self.balanced_graphics_btn = QPushButton(self.layoutWidget)
-        self.balanced_graphics_btn.setObjectName(u"balanced_graphics_btn")
-        sizePolicy.setHeightForWidth(self.balanced_graphics_btn.sizePolicy().hasHeightForWidth())
-        self.balanced_graphics_btn.setSizePolicy(sizePolicy)
-        self.balanced_graphics_btn.setMinimumSize(QSize(141, 41))
-        self.balanced_graphics_btn.setMaximumSize(QSize(141, 41))
-        self.balanced_graphics_btn.setFont(font3)
-        self.balanced_graphics_btn.setStyleSheet(u"")
-        self.balanced_graphics_btn.setCheckable(True)
-        self.balanced_graphics_btn.setFlat(True)
-
-        self.GraphicsLayout.addWidget(self.balanced_graphics_btn)
-
-        self.hd_graphics_btn = QPushButton(self.layoutWidget)
-        self.hd_graphics_btn.setObjectName(u"hd_graphics_btn")
-        sizePolicy.setHeightForWidth(self.hd_graphics_btn.sizePolicy().hasHeightForWidth())
-        self.hd_graphics_btn.setSizePolicy(sizePolicy)
-        self.hd_graphics_btn.setMinimumSize(QSize(141, 41))
-        self.hd_graphics_btn.setMaximumSize(QSize(141, 41))
-        self.hd_graphics_btn.setFont(font3)
-        self.hd_graphics_btn.setStyleSheet(u"")
-        self.hd_graphics_btn.setCheckable(True)
-        self.hd_graphics_btn.setFlat(True)
-
-        self.GraphicsLayout.addWidget(self.hd_graphics_btn)
-
-        self.hdr_graphics_btn = QPushButton(self.layoutWidget)
-        self.hdr_graphics_btn.setObjectName(u"hdr_graphics_btn")
-        sizePolicy.setHeightForWidth(self.hdr_graphics_btn.sizePolicy().hasHeightForWidth())
-        self.hdr_graphics_btn.setSizePolicy(sizePolicy)
-        self.hdr_graphics_btn.setMinimumSize(QSize(141, 41))
-        self.hdr_graphics_btn.setMaximumSize(QSize(141, 41))
-        self.hdr_graphics_btn.setFont(font3)
-        self.hdr_graphics_btn.setStyleSheet(u"")
-        self.hdr_graphics_btn.setCheckable(True)
-        self.hdr_graphics_btn.setFlat(True)
-
-        self.GraphicsLayout.addWidget(self.hdr_graphics_btn)
-
-        self.ultrahd_graphics_btn = QPushButton(self.layoutWidget)
-        self.ultrahd_graphics_btn.setObjectName(u"ultrahd_graphics_btn")
-        sizePolicy.setHeightForWidth(self.ultrahd_graphics_btn.sizePolicy().hasHeightForWidth())
-        self.ultrahd_graphics_btn.setSizePolicy(sizePolicy)
-        self.ultrahd_graphics_btn.setMinimumSize(QSize(141, 41))
-        self.ultrahd_graphics_btn.setMaximumSize(QSize(141, 41))
-        self.ultrahd_graphics_btn.setFont(font3)
-        self.ultrahd_graphics_btn.setStyleSheet(u"")
-        self.ultrahd_graphics_btn.setCheckable(True)
-        self.ultrahd_graphics_btn.setFlat(True)
-
-        self.GraphicsLayout.addWidget(self.ultrahd_graphics_btn)
-
-        self.uhd_graphics_btn = QPushButton(self.layoutWidget)
-        self.uhd_graphics_btn.setObjectName(u"uhd_graphics_btn")
-        self.uhd_graphics_btn.setEnabled(True)
-        sizePolicy.setHeightForWidth(self.uhd_graphics_btn.sizePolicy().hasHeightForWidth())
-        self.uhd_graphics_btn.setSizePolicy(sizePolicy)
-        self.uhd_graphics_btn.setMinimumSize(QSize(141, 41))
-        self.uhd_graphics_btn.setMaximumSize(QSize(141, 41))
-        self.uhd_graphics_btn.setFont(font3)
-        self.uhd_graphics_btn.setStyleSheet(u"")
-        self.uhd_graphics_btn.setCheckable(True)
-        self.uhd_graphics_btn.setFlat(True)
-
-        self.GraphicsLayout.addWidget(self.uhd_graphics_btn)
-
-        self.gridLayout.addWidget(self.GraphicsFrame, 0, 0, 1, 2)
-
-        self.FramerateFrame = QFrame(self.frame)
-        self.FramerateFrame.setObjectName(u"FramerateFrame")
-        self.FramerateFrame.setMinimumSize(QSize(821, 120))
-        self.FramerateFrame.setMaximumSize(QSize(9999, 9999))
-        self.FramerateFrame.setStyleSheet(u"")
-        self.fps_label = QLabel(self.FramerateFrame)
-        self.fps_label.setObjectName(u"fps_label")
-        self.fps_label.setGeometry(QRect(10, 10, 180, 37))
-        self.fps_label.setFont(font6)
-        self.fps_label.setStyleSheet(u"color: #ffffff;")
-        self.layoutWidget1 = QWidget(self.FramerateFrame)
-        self.layoutWidget1.setObjectName(u"layoutWidget1")
-        self.layoutWidget1.setGeometry(QRect(10, 56, 1006, 84))
-        self.FramerateLayout = QGridLayout(self.layoutWidget1)
-        self.FramerateLayout.setHorizontalSpacing(10)
-        self.FramerateLayout.setVerticalSpacing(10)
-        self.FramerateLayout.setObjectName(u"FramerateLayout")
-        self.FramerateLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
-        self.FramerateLayout.setContentsMargins(8, 6, 8, 6)
-        self.low_fps_btn = QPushButton(self.layoutWidget1)
-        self.low_fps_btn.setObjectName(u"low_fps_btn")
-        sizePolicy.setHeightForWidth(self.low_fps_btn.sizePolicy().hasHeightForWidth())
-        self.low_fps_btn.setSizePolicy(sizePolicy)
-        self.low_fps_btn.setMinimumSize(QSize(120, 41))
-        self.low_fps_btn.setMaximumSize(QSize(120, 41))
-        self.low_fps_btn.setFont(font3)
-        self.low_fps_btn.setStyleSheet(u"")
-        self.low_fps_btn.setCheckable(True)
-        self.low_fps_btn.setFlat(True)
-
-        self.FramerateLayout.addWidget(self.low_fps_btn, 0, 0, 1, 1)
-
-        self.medium_fps_btn = QPushButton(self.layoutWidget1)
-        self.medium_fps_btn.setObjectName(u"medium_fps_btn")
-        sizePolicy.setHeightForWidth(self.medium_fps_btn.sizePolicy().hasHeightForWidth())
-        self.medium_fps_btn.setSizePolicy(sizePolicy)
-        self.medium_fps_btn.setMinimumSize(QSize(120, 41))
-        self.medium_fps_btn.setMaximumSize(QSize(120, 41))
-        self.medium_fps_btn.setFont(font3)
-        self.medium_fps_btn.setStyleSheet(u"")
-        self.medium_fps_btn.setCheckable(True)
-        self.medium_fps_btn.setFlat(True)
-
-        self.FramerateLayout.addWidget(self.medium_fps_btn, 0, 1, 1, 1)
-
-        self.high_fps_btn = QPushButton(self.layoutWidget1)
-        self.high_fps_btn.setObjectName(u"high_fps_btn")
-        sizePolicy.setHeightForWidth(self.high_fps_btn.sizePolicy().hasHeightForWidth())
-        self.high_fps_btn.setSizePolicy(sizePolicy)
-        self.high_fps_btn.setMinimumSize(QSize(120, 41))
-        self.high_fps_btn.setMaximumSize(QSize(120, 41))
-        self.high_fps_btn.setFont(font3)
-        self.high_fps_btn.setStyleSheet(u"")
-        self.high_fps_btn.setCheckable(True)
-        self.high_fps_btn.setFlat(True)
-
-        self.FramerateLayout.addWidget(self.high_fps_btn, 0, 2, 1, 1)
-
-        self.ultra_fps_btn = QPushButton(self.layoutWidget1)
-        self.ultra_fps_btn.setObjectName(u"ultra_fps_btn")
-        sizePolicy.setHeightForWidth(self.ultra_fps_btn.sizePolicy().hasHeightForWidth())
-        self.ultra_fps_btn.setSizePolicy(sizePolicy)
-        self.ultra_fps_btn.setMinimumSize(QSize(120, 41))
-        self.ultra_fps_btn.setMaximumSize(QSize(120, 41))
-        self.ultra_fps_btn.setFont(font3)
-        self.ultra_fps_btn.setStyleSheet(u"")
-        self.ultra_fps_btn.setCheckable(True)
-        self.ultra_fps_btn.setFlat(True)
-
-        self.FramerateLayout.addWidget(self.ultra_fps_btn, 0, 3, 1, 1)
-
-        self.extreme_fps_btn = QPushButton(self.layoutWidget1)
-        self.extreme_fps_btn.setObjectName(u"extreme_fps_btn")
-        sizePolicy.setHeightForWidth(self.extreme_fps_btn.sizePolicy().hasHeightForWidth())
-        self.extreme_fps_btn.setSizePolicy(sizePolicy)
-        self.extreme_fps_btn.setMinimumSize(QSize(120, 41))
-        self.extreme_fps_btn.setMaximumSize(QSize(120, 41))
-        self.extreme_fps_btn.setFont(font3)
-        self.extreme_fps_btn.setStyleSheet(u"")
-        self.extreme_fps_btn.setCheckable(True)
-        self.extreme_fps_btn.setFlat(True)
-
-        self.FramerateLayout.addWidget(self.extreme_fps_btn, 1, 0, 1, 1)
-
-        self.fps90_fps_btn = QPushButton(self.layoutWidget1)
-        self.fps90_fps_btn.setObjectName(u"fps90_fps_btn")
-        sizePolicy.setHeightForWidth(self.fps90_fps_btn.sizePolicy().hasHeightForWidth())
-        self.fps90_fps_btn.setSizePolicy(sizePolicy)
-        self.fps90_fps_btn.setMinimumSize(QSize(120, 41))
-        self.fps90_fps_btn.setMaximumSize(QSize(120, 41))
-        self.fps90_fps_btn.setFont(font3)
-        self.fps90_fps_btn.setStyleSheet(u"")
-        self.fps90_fps_btn.setCheckable(True)
-        self.fps90_fps_btn.setFlat(True)
-
-        self.FramerateLayout.addWidget(self.fps90_fps_btn, 1, 1, 1, 1)
-
-        self.fps120_fps_btn = QPushButton(self.layoutWidget1)
-        self.fps120_fps_btn.setObjectName(u"fps120_fps_btn")
-        sizePolicy.setHeightForWidth(self.fps120_fps_btn.sizePolicy().hasHeightForWidth())
-        self.fps120_fps_btn.setSizePolicy(sizePolicy)
-        self.fps120_fps_btn.setMinimumSize(QSize(120, 41))
-        self.fps120_fps_btn.setMaximumSize(QSize(120, 41))
-        self.fps120_fps_btn.setFont(font3)
-        self.fps120_fps_btn.setStyleSheet(u"")
-        self.fps120_fps_btn.setCheckable(True)
-        self.fps120_fps_btn.setFlat(True)
-
-        self.FramerateLayout.addWidget(self.fps120_fps_btn, 1, 2, 1, 1)
-
-        # Removed 240 FPS option (not supported)
-
-        self.gridLayout.addWidget(self.FramerateFrame, 1, 0, 1, 2)
-
-        self.StyleFrame = QFrame(self.frame)
-        self.StyleFrame.setObjectName(u"StyleFrame")
-        self.StyleFrame.setEnabled(True)
-        self.StyleFrame.setMinimumSize(QSize(820, 170))
-        self.StyleFrame.setMaximumSize(QSize(9999, 9999))
-        self.StyleFrame.setStyleSheet(u"QPushButton {\n"
-                                      "                                border: none;\n"
-                                      "                                border-image: none;\n"
-                                      "                                background: transparent;\n"
-                                      "                                icon-size: 100%;\n"
-                                      "                                qproperty-iconSize: 120px; /* set the size of the button icon */\n"
-                                      "                                qproperty-text: \"\"; /* set the text displayed on the button */\n"
-                                      "                                qproperty-flat: true; /* remove the default button border */\n"
-                                      "                                padding: 0; /* remove any padding */\n"
-                                      "                                }\n"
-                                      "\n"
-                                      "                                QPushButton:checked {\n"
-                                      "                                border-width: 5px; /* set the width of the border */\n"
-                                      "                                border-image: url(:/Graphics/checked.png);\n"
-                                      "                                }\n"
-                                      "                            ")
-        self.style_label = QLabel(self.StyleFrame)
-        self.style_label.setObjectName(u"style_label")
-        self.style_label.setGeometry(QRect(10, 10, 78, 37))
-        self.style_label.setFont(font6)
-        self.style_label.setStyleSheet(u"color: #ffffff;")
-        self.layoutWidget2 = QWidget(self.StyleFrame)
-        self.layoutWidget2.setObjectName(u"layoutWidget2")
-        self.layoutWidget2.setGeometry(QRect(10, 54, 851, 120))
-        self.StyleLayout = QHBoxLayout(self.layoutWidget2)
-        self.StyleLayout.setObjectName(u"StyleLayout")
-        self.StyleLayout.setSpacing(12)
-        self.StyleLayout.setContentsMargins(10, 6, 10, 6)
-        self.classic_style_btn = QPushButton(self.layoutWidget2)
-        self.classic_style_btn.setObjectName(u"classic_style_btn")
-        sizePolicy.setHeightForWidth(self.classic_style_btn.sizePolicy().hasHeightForWidth())
-        self.classic_style_btn.setSizePolicy(sizePolicy)
-        self.classic_style_btn.setMinimumSize(QSize(120, 120))
-        self.classic_style_btn.setMaximumSize(QSize(120, 120))
-        self.classic_style_btn.setStyleSheet(u"QPushButton {\n"
-                                             "                                                qproperty-icon: url(:/Graphics/Classic.png); /* set the button icon */\n"
-                                             "                                                }\n"
-                                             "                                            ")
-        self.classic_style_btn.setCheckable(True)
-
-        self.StyleLayout.addWidget(self.classic_style_btn)
-
-        self.colorful_style_btn = QPushButton(self.layoutWidget2)
-        self.colorful_style_btn.setObjectName(u"colorful_style_btn")
-        sizePolicy.setHeightForWidth(self.colorful_style_btn.sizePolicy().hasHeightForWidth())
-        self.colorful_style_btn.setSizePolicy(sizePolicy)
-        self.colorful_style_btn.setMinimumSize(QSize(120, 120))
-        self.colorful_style_btn.setMaximumSize(QSize(120, 120))
-        self.colorful_style_btn.setStyleSheet(u"QPushButton {\n"
-                                              "                                                qproperty-icon: url(:/Graphics/Colorful.png); /* set the button icon */\n"
-                                              "                                                }\n"
-                                              "\n"
-                                              "                                            ")
-        self.colorful_style_btn.setCheckable(True)
-
-        self.StyleLayout.addWidget(self.colorful_style_btn)
-
-        self.realistic_style_btn = QPushButton(self.layoutWidget2)
-        self.realistic_style_btn.setObjectName(u"realistic_style_btn")
-        sizePolicy.setHeightForWidth(self.realistic_style_btn.sizePolicy().hasHeightForWidth())
-        self.realistic_style_btn.setSizePolicy(sizePolicy)
-        self.realistic_style_btn.setMinimumSize(QSize(120, 120))
-        self.realistic_style_btn.setMaximumSize(QSize(120, 120))
-        self.realistic_style_btn.setStyleSheet(u"QPushButton {\n"
-                                               "                                                qproperty-icon: url(:/Graphics/Realistic.png); /* set the button icon */\n"
-                                               "                                                }\n"
-                                               "\n"
-                                               "                                            ")
-        self.realistic_style_btn.setCheckable(True)
-
-        self.StyleLayout.addWidget(self.realistic_style_btn)
-
-        self.soft_style_btn = QPushButton(self.layoutWidget2)
-        self.soft_style_btn.setObjectName(u"soft_style_btn")
-        sizePolicy.setHeightForWidth(self.soft_style_btn.sizePolicy().hasHeightForWidth())
-        self.soft_style_btn.setSizePolicy(sizePolicy)
-        self.soft_style_btn.setMinimumSize(QSize(120, 120))
-        self.soft_style_btn.setMaximumSize(QSize(120, 120))
-        self.soft_style_btn.setStyleSheet(u"QPushButton {\n"
-                                          "                                                qproperty-icon: url(:/Graphics/Soft.png); /* set the button icon */\n"
-                                          "                                                }\n"
-                                          "                                            ")
-        self.soft_style_btn.setCheckable(True)
-
-        self.StyleLayout.addWidget(self.soft_style_btn)
-
-        self.movie_style_btn = QPushButton(self.layoutWidget2)
-        self.movie_style_btn.setObjectName(u"movie_style_btn")
-        sizePolicy.setHeightForWidth(self.movie_style_btn.sizePolicy().hasHeightForWidth())
-        self.movie_style_btn.setSizePolicy(sizePolicy)
-        self.movie_style_btn.setMinimumSize(QSize(120, 120))
-        self.movie_style_btn.setMaximumSize(QSize(120, 120))
-        self.movie_style_btn.setStyleSheet(u"QPushButton {\n"
-                                           "                                                qproperty-icon: url(:/Graphics/Movie.png); /* set the button icon */\n"
-                                           "                                                }\n"
-                                           "                                            ")
-        self.movie_style_btn.setCheckable(True)
-
-        self.StyleLayout.addWidget(self.movie_style_btn)
-
-        self.gridLayout.addWidget(self.StyleFrame, 2, 0, 1, 2)
-
-        self.ShadowFrame = QFrame(self.frame)
-        self.ShadowFrame.setObjectName(u"ShadowFrame")
-        self.ShadowFrame.setMinimumSize(QSize(1, 80))
-        self.ShadowFrame.setMaximumSize(QSize(9999, 9999))
-        self.ShadowFrame.setStyleSheet(u"")
-        self.shadow_label = QLabel(self.ShadowFrame)
-        self.shadow_label.setObjectName(u"shadow_label")
-        self.shadow_label.setGeometry(QRect(10, 10, 126, 37))
-        self.shadow_label.setFont(font6)
-        self.shadow_label.setStyleSheet(u"color: #ffffff;")
-        self.layoutWidget_2 = QWidget(self.ShadowFrame)
-        self.layoutWidget_2.setObjectName(u"layoutWidget_2")
-        self.layoutWidget_2.setGeometry(QRect(10, 44, 287, 43))
-        self.ShadowLayout = QHBoxLayout(self.layoutWidget_2)
-        self.ShadowLayout.setSpacing(12)
-        self.ShadowLayout.setObjectName(u"ShadowLayout")
-        self.ShadowLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
-        self.ShadowLayout.setContentsMargins(10, 6, 10, 6)
-        self.disable_shadow_btn = QPushButton(self.layoutWidget_2)
-        self.disable_shadow_btn.setObjectName(u"disable_shadow_btn")
-        self.disable_shadow_btn.setEnabled(True)
-        sizePolicy.setHeightForWidth(self.disable_shadow_btn.sizePolicy().hasHeightForWidth())
-        self.disable_shadow_btn.setSizePolicy(sizePolicy)
-        self.disable_shadow_btn.setMinimumSize(QSize(141, 41))
-        self.disable_shadow_btn.setMaximumSize(QSize(141, 41))
-        self.disable_shadow_btn.setFont(font3)
-        self.disable_shadow_btn.setStyleSheet(u"")
-        self.disable_shadow_btn.setCheckable(True)
-        self.disable_shadow_btn.setFlat(True)
-
-        self.ShadowLayout.addWidget(self.disable_shadow_btn)
-
-        self.enable_shadow_btn = QPushButton(self.layoutWidget_2)
-        self.enable_shadow_btn.setObjectName(u"enable_shadow_btn")
-        self.enable_shadow_btn.setEnabled(True)
-        sizePolicy.setHeightForWidth(self.enable_shadow_btn.sizePolicy().hasHeightForWidth())
-        self.enable_shadow_btn.setSizePolicy(sizePolicy)
-        self.enable_shadow_btn.setMinimumSize(QSize(141, 41))
-        self.enable_shadow_btn.setMaximumSize(QSize(141, 41))
-        self.enable_shadow_btn.setFont(font3)
-        self.enable_shadow_btn.setStyleSheet(u"")
-        self.enable_shadow_btn.setCheckable(True)
-        self.enable_shadow_btn.setFlat(True)
-
-        self.ShadowLayout.addWidget(self.enable_shadow_btn)
-
-        self.gridLayout.addWidget(self.ShadowFrame, 3, 0, 1, 1)
-
-        self.ResolutionkrFrame = QFrame(self.frame)
-        self.ResolutionkrFrame.setObjectName(u"ResolutionkrFrame")
-        self.ResolutionkrFrame.setMinimumSize(QSize(1, 80))
-        self.ResolutionkrFrame.setMaximumSize(QSize(9999, 9999))
-        self.resolution_label = QLabel(self.ResolutionkrFrame)
-        self.resolution_label.setObjectName(u"resolution_label")
-        self.resolution_label.setGeometry(QRect(10, 10, 299, 35))
-        font7 = QFont(font_family)
-        font7.setPointSize(22)
-        font7.setBold(True)
-        font7.setWeight(75)
-        self.resolution_label.setFont(font7)
-        self.resolution_label.setStyleSheet(u"color: #ffffff;")
-        self.resolution_btn = QPushButton(self.ResolutionkrFrame)
-        self.resolution_btn.setObjectName(u"resolution_btn")
-        self.resolution_btn.setGeometry(QRect(10, 44, 141, 41))
-        sizePolicy.setHeightForWidth(self.resolution_btn.sizePolicy().hasHeightForWidth())
-        self.resolution_btn.setSizePolicy(sizePolicy)
-        self.resolution_btn.setMinimumSize(QSize(141, 41))
-        self.resolution_btn.setMaximumSize(QSize(141, 41))
-        self.resolution_btn.setFont(font3)
-        self.resolution_btn.setStyleSheet(u"")
-        self.resolution_btn.setCheckable(True)
-        self.resolution_btn.setFlat(True)
-
-        self.gridLayout.addWidget(self.ResolutionkrFrame, 3, 1, 1, 1)
-
-        self.stackedWidget.addWidget(self.gfx_page)
-        self.other_page = QWidget()
-        self.other_page.setObjectName(u"other_page")
-        self.other_page_background = QLabel(self.other_page)
-        self.other_page_background.setObjectName(u"other_page_background")
-        self.other_page_background.setGeometry(QRect(-30, -80, 1311, 741))
-        self.other_page_background.setStyleSheet(u"border-image: url(:/Graphics/bg.png);")
-        self.tempcleaner_other_btn = QPushButton(self.other_page)
-        self.tempcleaner_other_btn.setObjectName(u"tempcleaner_other_btn")
-        self.tempcleaner_other_btn.setGeometry(QRect(50, 120, 411, 51))
-        self.tempcleaner_other_btn.setMinimumSize(QSize(141, 1))
-        self.tempcleaner_other_btn.setMaximumSize(QSize(999, 999))
-        font8 = QFont(font_family)
-        font8.setPointSize(20)
-        font8.setBold(True)
-        font8.setWeight(75)
-        font8.setKerning(False)
-        self.tempcleaner_other_btn.setFont(font8)
-        self.tempcleaner_other_btn.setStyleSheet(u"")
-        self.tempcleaner_other_btn.setCheckable(False)
-        self.glsmartsettings_other_btn = QPushButton(self.other_page)
-        self.glsmartsettings_other_btn.setObjectName(u"glsmartsettings_other_btn")
-        self.glsmartsettings_other_btn.setGeometry(QRect(50, 190, 411, 51))
-        self.glsmartsettings_other_btn.setMinimumSize(QSize(141, 1))
-        self.glsmartsettings_other_btn.setMaximumSize(QSize(999, 999))
-        self.glsmartsettings_other_btn.setFont(font8)
-        self.glsmartsettings_other_btn.setStyleSheet(u"")
-        self.glsmartsettings_other_btn.setCheckable(False)
-        self.gloptimizer_other_btn = QPushButton(self.other_page)
-        self.gloptimizer_other_btn.setObjectName(u"gloptimizer_other_btn")
-        self.gloptimizer_other_btn.setGeometry(QRect(50, 260, 411, 51))
-        self.gloptimizer_other_btn.setMinimumSize(QSize(141, 1))
-        self.gloptimizer_other_btn.setMaximumSize(QSize(999, 999))
-        self.gloptimizer_other_btn.setFont(font8)
-        self.gloptimizer_other_btn.setStyleSheet(u"")
-        self.gloptimizer_other_btn.setCheckable(False)
-        self.glpriority_other_btn = QPushButton(self.other_page)
-        self.glpriority_other_btn.setObjectName(u"glpriority_other_btn")
-        self.glpriority_other_btn.setGeometry(QRect(50, 330, 260, 51))
-        self.glpriority_other_btn.setMinimumSize(QSize(141, 1))
-        self.glpriority_other_btn.setMaximumSize(QSize(999, 999))
-        self.glpriority_other_btn.setFont(font8)
-        self.glpriority_other_btn.setStyleSheet(u"")
-        self.glpriority_other_btn.setCheckable(False)
-        self.glpriority_dropdown = QComboBox(self.other_page)
-        self.glpriority_dropdown.addItem("")
-        self.glpriority_dropdown.addItem("")
-        self.glpriority_dropdown.setObjectName(u"glpriority_dropdown")
-        self.glpriority_dropdown.setGeometry(QRect(320, 330, 141, 51))
-        self.glpriority_dropdown.setFont(font2)
-        self.glpriority_dropdown.setStyleSheet(u"")
-        self.gllatency_other_btn = QPushButton(self.other_page)
-        self.gllatency_other_btn.setObjectName(u"gllatency_other_btn")
-        self.gllatency_other_btn.setGeometry(QRect(50, 400, 411, 51))
-        self.gllatency_other_btn.setMinimumSize(QSize(141, 1))
-        self.gllatency_other_btn.setMaximumSize(QSize(999, 999))
-        self.gllatency_other_btn.setFont(font8)
-        self.gllatency_other_btn.setStyleSheet(u"")
-        self.gllatency_other_btn.setCheckable(False)
-        self.all_other_btn = QPushButton(self.other_page)
-        self.all_other_btn.setObjectName(u"all_other_btn")
-        self.all_other_btn.setGeometry(QRect(50, 470, 411, 51))
-        self.all_other_btn.setMinimumSize(QSize(141, 1))
-        self.all_other_btn.setMaximumSize(QSize(999, 999))
-        self.all_other_btn.setFont(font8)
-        self.all_other_btn.setStyleSheet(u"")
-        self.all_other_btn.setCheckable(False)
-        self.forceclosegl_other_btn = QPushButton(self.other_page)
-        self.forceclosegl_other_btn.setObjectName(u"forceclosegl_other_btn")
-        self.forceclosegl_other_btn.setGeometry(QRect(50, 540, 411, 51))
-        self.forceclosegl_other_btn.setMinimumSize(QSize(141, 1))
-        self.forceclosegl_other_btn.setMaximumSize(QSize(999, 999))
-        self.forceclosegl_other_btn.setFont(font8)
-        self.forceclosegl_other_btn.setStyleSheet(u"QPushButton {\n"
-                                                  "                                background-color: rgba(255, 0, 4, 50);\n"
-                                                  "                                }\n"
-                                                  "\n"
-                                                  "\n"
-                                                  "                            ")
-        self.forceclosegl_other_btn.setCheckable(False)
-        self.dns_dropdown = QComboBox(self.other_page)
-        self.dns_dropdown.addItem("")
-        self.dns_dropdown.addItem("")
-        self.dns_dropdown.addItem("")
-        self.dns_dropdown.addItem("")
-        self.dns_dropdown.addItem("")
-        self.dns_dropdown.setObjectName(u"dns_dropdown")
-        self.dns_dropdown.setGeometry(QRect(540, 280, 301, 46))
-        self.dns_dropdown.setFont(font2)
-        self.dns_dropdown.setStyleSheet(u"")
-        self.shortcut_dropdown = QComboBox(self.other_page)
-        self.shortcut_dropdown.addItem("")
-        self.shortcut_dropdown.addItem("")
-        self.shortcut_dropdown.addItem("")
-        self.shortcut_dropdown.addItem("")
-        self.shortcut_dropdown.addItem("")
-        self.shortcut_dropdown.setObjectName(u"shortcut_dropdown")
-        self.shortcut_dropdown.setGeometry(QRect(540, 150, 301, 46))
-        self.shortcut_dropdown.setFont(font2)
-        self.shortcut_dropdown.setStyleSheet(u"")
-        self.optimizer_label = QLabel(self.other_page)
-        self.optimizer_label.setObjectName(u"optimizer_label")
-        self.optimizer_label.setGeometry(QRect(30, 50, 351, 51))
-        font9 = QFont(font_family)
-        font9.setPointSize(28)
-        font9.setBold(True)
-        font9.setWeight(75)
-        self.optimizer_label.setFont(font9)
-        self.optimizer_label.setStyleSheet(u"text-align: center;\n"
-                                           "                                border: none;\n"
-                                           "                                color: rgb(255, 255, 255);\n"
-                                           "                            ")
-        self.shortcut_other_btn = QPushButton(self.other_page)
-        self.shortcut_other_btn.setObjectName(u"shortcut_other_btn")
-        self.shortcut_other_btn.setGeometry(QRect(854, 150, 221, 46))
-        self.shortcut_other_btn.setFont(font8)
-        self.shortcut_other_btn.setStyleSheet(u"")
-        self.shortcut_other_btn.setCheckable(False)
-        self.line = QFrame(self.other_page)
-        self.line.setObjectName(u"line")
-        self.line.setGeometry(QRect(480, 110, 20, 361))
-        self.line.setFrameShape(QFrame.VLine)
-        self.line.setFrameShadow(QFrame.Sunken)
-        self.shortcut_label = QLabel(self.other_page)
-        self.shortcut_label.setObjectName(u"shortcut_label")
-        self.shortcut_label.setGeometry(QRect(520, 90, 351, 51))
-        self.shortcut_label.setFont(font9)
-        self.shortcut_label.setStyleSheet(u"text-align: center;\n"
-                                          "                                border: none;\n"
-                                          "                                color: rgb(255, 255, 255);\n"
-                                          "                            ")
-        self.dns_label = QLabel(self.other_page)
-        self.dns_label.setObjectName(u"dns_label")
-        self.dns_label.setGeometry(QRect(520, 220, 351, 51))
-        self.dns_label.setFont(font9)
-        self.dns_label.setStyleSheet(u"text-align: center;\n"
-                                     "                                border: none;\n"
-                                     "                                color: rgb(255, 255, 255);\n"
-                                     "                            ")
-        self.dns_other_btn = QPushButton(self.other_page)
-        self.dns_other_btn.setObjectName(u"dns_other_btn")
-        self.dns_other_btn.setGeometry(QRect(854, 280, 221, 46))
-        self.dns_other_btn.setFont(font8)
-        self.dns_other_btn.setStyleSheet(u"")
-        self.dns_other_btn.setCheckable(False)
-        self.dns_status_label = QLabel(self.other_page)
-        self.dns_status_label.setObjectName(u"dns_status_label")
-        self.dns_status_label.setGeometry(QRect(550, 330, 301, 31))
-        self.dns_status_label.setFont(font4)
-        self.dns_status_label.setStyleSheet(u"color: #969696;")
-        self.ipad_label = QLabel(self.other_page)
-        self.ipad_label.setObjectName(u"ipad_label")
-        self.ipad_label.setGeometry(QRect(520, 350, 351, 51))
-        self.ipad_label.setFont(font9)
-        self.ipad_label.setStyleSheet(u"text-align: center;\n"
-                                      "                                border: none;\n"
-                                      "                                color: rgb(255, 255, 255);\n"
-                                      "                            ")
-        self.ipad_other_btn = QPushButton(self.other_page)
-        self.ipad_other_btn.setObjectName(u"ipad_other_btn")
-        self.ipad_other_btn.setGeometry(QRect(854, 410, 221, 46))
-        self.ipad_other_btn.setFont(font8)
-        self.ipad_other_btn.setStyleSheet(u"")
-        self.ipad_other_btn.setCheckable(False)
-        self.ipad_dropdown = QComboBox(self.other_page)
-        self.ipad_dropdown.addItem("")
-        self.ipad_dropdown.addItem("")
-        self.ipad_dropdown.addItem("")
-        self.ipad_dropdown.addItem("")
-        self.ipad_dropdown.setObjectName(u"ipad_dropdown")
-        self.ipad_dropdown.setGeometry(QRect(540, 410, 301, 46))
-        self.ipad_dropdown.setFont(font2)
-        self.ipad_dropdown.setStyleSheet(u"")
-        self.ipad_code = QLineEdit(self.other_page)
-        self.ipad_code.setObjectName(u"ipad_code")
-        self.ipad_code.setGeometry(QRect(540, 470, 301, 31))
-        font10 = QFont(font_family)
-        font10.setPointSize(17)
-        font10.setBold(True)
-        font10.setWeight(75)
-        self.ipad_code.setFont(font10)
-        self.ipad_code.setStyleSheet(u"border-image: url(:/Graphics/fps.png);\n"
-                                     "                                text-align: center;\n"
-                                     "                                color: #969696;\n"
-                                     "\n"
-                                     "                            ")
-        self.ipad_code.setReadOnly(True)
-        self.ipad_code_label = QLabel(self.other_page)
-        self.ipad_code_label.setObjectName(u"ipad_code_label")
-        self.ipad_code_label.setGeometry(QRect(550, 500, 251, 21))
-        font11 = QFont(font_family)
-        font11.setPointSize(12)
-        font11.setBold(True)
-        font11.setWeight(75)
-        self.ipad_code_label.setFont(font11)
-        self.ipad_code_label.setStyleSheet(u"color: #969696;")
-        self.ipad_rest_btn = QPushButton(self.other_page)
-        self.ipad_rest_btn.setObjectName(u"ipad_rest_btn")
-        self.ipad_rest_btn.setGeometry(QRect(854, 470, 221, 31))
-        font12 = QFont(font_family)
-        font12.setPointSize(15)
-        font12.setBold(True)
-        font12.setWeight(75)
-        font12.setKerning(False)
-        self.ipad_rest_btn.setFont(font12)
-        self.ipad_rest_btn.setStyleSheet(u"")
-        self.ipad_rest_btn.setCheckable(False)
-        self.stackedWidget.addWidget(self.other_page)
-        self.about_page = QWidget()
-        self.about_page.setObjectName(u"about_page")
-        self.about_page.setMaximumSize(QSize(1081, 651))
-        self.label_8 = QLabel(self.about_page)
-        self.label_8.setObjectName(u"label_8")
-        self.label_8.setEnabled(False)
-        self.label_8.setGeometry(QRect(-30, -80, 1311, 741))
-        self.label_8.setStyleSheet(u"border-image: url(:/Graphics/bg.png);")
-        self.about_label_text = QLabel(self.about_page)
-        self.about_label_text.setObjectName(u"about_label_text")
-        self.about_label_text.setGeometry(QRect(20, 0, 1061, 571))
-        self.about_label_text.setMaximumSize(QSize(1061, 571))
-        font13 = QFont(font_family)
-        font13.setPointSize(20)
-        font13.setBold(False)
-        font13.setWeight(50)
-        self.about_label_text.setFont(font13)
-        self.about_label_text.setStyleSheet(u"text-align: center;\n"
-                                            "                                border: none;\n"
-                                            "                                color: rgb(255, 255, 255);\n"
-                                            "                            ")
-        self.about_label_text.setOpenExternalLinks(True)
-        self.stackedWidget.addWidget(self.about_page)
-        self.appname_label = QLabel(self.centralwidget)
-        self.appname_label.setObjectName(u"appname_label")
-        self.appname_label.setGeometry(QRect(30, 4, 720, 52))
-        font14 = QFont(font_family)
-        font14.setPointSize(32)
-        font14.setBold(True)
-        font14.setWeight(75)
-        self.appname_label.setFont(font14)
-        self.appname_label.setStyleSheet(u"text-align: left;\n"
-                                         "                        border: none;\n"
-                                         "                        color: rgb(255, 255, 255);\n"
-                                         "                        padding-left: 6px;\n"
-                                         "                    ")
-        self.appstatus_label = QLabel(self.centralwidget)
-        self.appstatus_label.setObjectName(u"appstatus_label")
-        self.appstatus_label.setGeometry(QRect(10, 672, 93, 44))
-        font15 = QFont(font_family)
-        font15.setPointSize(19)
-        font15.setBold(True)
-        font15.setWeight(75)
-        self.appstatus_label.setFont(font15)
-        self.appstatus_label.setStyleSheet(u"color: #ffffff;")
-        self.appstatus_text_lable = QLabel(self.centralwidget)
-        self.appstatus_text_lable.setObjectName(u"appstatus_text_lable")
-        self.appstatus_text_lable.setGeometry(QRect(70, 673, 401, 44))
-        font16 = QFont(font_family)
-        font16.setPointSize(16)
-        font16.setBold(True)
-        font16.setWeight(75)
-        self.appstatus_text_lable.setFont(font16)
-        self.appstatus_text_lable.setStyleSheet(u"color: #ffffff;")
-        self.close_btn = QPushButton(self.centralwidget)
-        self.close_btn.setObjectName(u"close_btn")
-        self.close_btn.setGeometry(QRect(1240, 10, 51, 41))
-        font17 = QFont()
-        font17.setFamily(u"MS Shell Dlg 2")
-        font17.setPointSize(30)
-        font17.setBold(True)
-        font17.setWeight(75)
-        self.close_btn.setFont(font17)
-        self.close_btn.setStyleSheet(u"QPushButton {\n"
-                                     "                        border-image: none;\n"
-                                     "                        background-color: none;\n"
-                                     "                        background-repeat: no-repeat;\n"
-                                     "                        text-align: center;\n"
-                                     "                        border: none;\n"
-                                     "                        color: #FFF;\n"
-                                     "                        padding-top: -3px;\n"
-                                     "                        }\n"
-                                     "\n"
-                                     "                        QPushButton:checked,\n"
-                                     "                        QPushButton:pressed {\n"
-                                     "                        border-image: none;\n"
-                                     "                        background-color: rgba(0, 0, 0, 0);\n"
-                                     "                        background-repeat: no-repeat;\n"
-                                     "                        color: #c7fff6;\n"
-                                     "                        text-align: center;\n"
-                                     "                        }\n"
-                                     "                    ")
-        self.close_btn.setFlat(True)
-        self.minimize_btn = QPushButton(self.centralwidget)
-        self.minimize_btn.setObjectName(u"minimize_btn")
-        self.minimize_btn.setGeometry(QRect(1180, 10, 51, 41))
-        font18 = QFont()
-        font18.setFamily(u"MS Shell Dlg 2")
-        font18.setPointSize(36)
-        font18.setBold(True)
-        font18.setWeight(75)
-        self.minimize_btn.setFont(font18)
-        self.minimize_btn.setStyleSheet(u"QPushButton {\n"
-                                        "                        border-image: none;\n"
-                                        "                        background-color: none;\n"
-                                        "                        background-repeat: no-repeat;\n"
-                                        "                        text-align: center;\n"
-                                        "                        border: none;\n"
-                                        "                        color: #FFF;\n"
-                                        "                        padding-top: -3px;\n"
-                                        "                        }\n"
-                                        "\n"
-                                        "                        QPushButton:checked,\n"
-                                        "                        QPushButton:pressed {\n"
-                                        "                        border-image: none;\n"
-                                        "                        background-color: rgba(0, 0, 0, 0);\n"
-                                        "                        background-repeat: no-repeat;\n"
-                                        "                        color: #c7fff6;\n"
-                                        "                        text-align: center;\n"
-                                        "                        }\n"
-                                        "                    ")
-        self.minimize_btn.setFlat(True)
-        self.PagesFrame = QFrame(self.centralwidget)
-        self.PagesFrame.setObjectName(u"PagesFrame")
-        self.PagesFrame.setGeometry(QRect(1140, 50, 168, 661))
-        self.PagesFrame.setStyleSheet(u"QPushButton {\n"
-                                      "                        border-image: none;\n"
-                                      "                        text-align: center;\n"
-                                      "                        border: none;\n"
-                                      "                        color: #969696; /* sets the text color to #969696 */\n"
-                                      "                        text-align: center; /* aligns the text to the left */\n"
-                                      "                        padding: 10px 0;\n"
-                                      "                        border-radius: 8px;\n"
-                                      "\n"
-                                      "                        }\n"
-                                      "\n"
-                                      "                        QPushButton:hover {\n"
-                                      "                        color: #ffffff;\n"
-                                      "                        background-color: rgba(255, 255, 255, 20);\n"
-                                      "                        }\n"
-                                      "\n"
-                                      "                        QPushButton:checked {\n"
-                                      "\n"
-                                      "                        border-image: url(:/Graphics/menu_checked.png);\n"
-                                      "\n"
-                                      "                        color: #f7d620; /* sets the text color to #b7ece4 */\n"
-                                      "                        background-repeat: no-repeat;\n"
-                                      "                        text-align: center;\n"
-                                      "                        }\n"
-                                      "                    ")
-        self.PagesFrame.setFrameShape(QFrame.NoFrame)
-        self.gfx_button = QPushButton(self.PagesFrame)
-        self.gfx_button.setObjectName(u"gfx_button")
-        self.gfx_button.setGeometry(QRect(0, 10, 168, 80))
-        self.gfx_button.setFont(font6)
-        self.gfx_button.setStyleSheet(u"")
-        self.gfx_button.setCheckable(True)
-        self.gfx_button.setChecked(True)
-        self.gfx_button.setFlat(True)
-        self.other_button = QPushButton(self.PagesFrame)
-        self.other_button.setObjectName(u"other_button")
-        self.other_button.setGeometry(QRect(0, 90, 168, 80))
-        self.other_button.setFont(font6)
-        self.other_button.setStyleSheet(u"")
-        self.other_button.setCheckable(True)
-        self.other_button.setFlat(True)
-        self.about_button = QPushButton(self.PagesFrame)
-        self.about_button.setObjectName(u"about_button")
-        self.about_button.setGeometry(QRect(0, 565, 168, 80))
-        self.about_button.setFont(font6)
-        self.about_button.setStyleSheet(u"")
-        self.about_button.setCheckable(True)
-        self.about_button.setFlat(True)
         MainWindow.setCentralWidget(self.centralwidget)
-
         self.retranslateUi(MainWindow)
 
-        self.stackedWidget.setCurrentIndex(0)
+    def _build_title_bar(self):
+        self.titleBar = QFrame(self.centralwidget)
+        self.titleBar.setObjectName("titleBar")
+        self.titleBarLayout = QHBoxLayout(self.titleBar)
+        self.titleBarLayout.setContentsMargins(12, 8, 12, 8)
+        self.titleBarLayout.setSpacing(10)
 
-        QMetaObject.connectSlotsByName(MainWindow)
-        # setupUi
+        self.appname_label = QLabel(self.titleBar)
+        self.appname_label.setObjectName("appname_label")
+        app_font = QFont("Segoe UI", 12)
+        app_font.setBold(True)
+        self.appname_label.setFont(app_font)
+
+        nav_host = QWidget(self.titleBar)
+        nav_layout = QHBoxLayout(nav_host)
+        nav_layout.setContentsMargins(0, 0, 0, 0)
+        nav_layout.setSpacing(4)
+
+        self.gfx_button = QPushButton(nav_host)
+        self.gfx_button.setObjectName("gfx_button")
+        self.gfx_button.setProperty("role", "nav")
+        self.gfx_button.setCheckable(True)
+        self.gfx_button.setChecked(True)
+
+        self.other_button = QPushButton(nav_host)
+        self.other_button.setObjectName("other_button")
+        self.other_button.setProperty("role", "nav")
+        self.other_button.setCheckable(True)
+
+        self.about_button = QPushButton(nav_host)
+        self.about_button.setObjectName("about_button")
+        self.about_button.setProperty("role", "nav")
+        self.about_button.setCheckable(True)
+
+        nav_layout.addWidget(self.gfx_button)
+        nav_layout.addWidget(self.other_button)
+        nav_layout.addWidget(self.about_button)
+
+        self.zoom75_btn = QPushButton("75%", self.titleBar)
+        self.zoom75_btn.setObjectName("zoom75_btn")
+        self.zoom100_btn = QPushButton("100%", self.titleBar)
+        self.zoom100_btn.setObjectName("zoom100_btn")
+        self.zoom125_btn = QPushButton("125%", self.titleBar)
+        self.zoom125_btn.setObjectName("zoom125_btn")
+        for b in [self.zoom75_btn, self.zoom100_btn, self.zoom125_btn]:
+            b.setMinimumWidth(58)
+
+        self.minimize_btn = QPushButton("-", self.titleBar)
+        self.minimize_btn.setObjectName("minimize_btn")
+        self.minimize_btn.setMinimumWidth(36)
+        self.close_btn = QPushButton("X", self.titleBar)
+        self.close_btn.setObjectName("close_btn")
+        self.close_btn.setMinimumWidth(36)
+
+        self.titleBarLayout.addWidget(self.appname_label, 1)
+        self.titleBarLayout.addWidget(nav_host, 0)
+        self.titleBarLayout.addStretch(1)
+        self.titleBarLayout.addWidget(self.zoom75_btn)
+        self.titleBarLayout.addWidget(self.zoom100_btn)
+        self.titleBarLayout.addWidget(self.zoom125_btn)
+        self.titleBarLayout.addWidget(self.minimize_btn)
+        self.titleBarLayout.addWidget(self.close_btn)
+
+        self.rootLayout.addWidget(self.titleBar)
+
+    def _build_pages(self):
+        self.stackedWidget = QStackedWidget(self.centralwidget)
+        self.stackedWidget.setObjectName("stackedWidget")
+        self.stackedWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self._build_gfx_page()
+        self._build_optimizer_page()
+        self._build_about_page()
+
+        self.stackedWidget.addWidget(self.gfx_page)
+        self.stackedWidget.addWidget(self.other_page)
+        self.stackedWidget.addWidget(self.about_page)
+        self.rootLayout.addWidget(self.stackedWidget, 1)
+
+    def _section_frame(self, parent):
+        frame = QFrame(parent)
+        frame.setObjectName("sectionBox")
+        frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        return frame
+
+    def _section_label(self, text, parent):
+        label = QLabel(text, parent)
+        label.setObjectName("sectionLabel")
+        return label
+
+    def _build_gfx_page(self):
+        self.gfx_page = QWidget()
+        self.gfx_page.setObjectName("gfx_page")
+        page_layout = QVBoxLayout(self.gfx_page)
+        page_layout.setContentsMargins(14, 12, 14, 12)
+        page_layout.setSpacing(10)
+
+        self.connection_banner_label = QLabel(self.gfx_page)
+        self.connection_banner_label.setObjectName("connection_banner_label")
+        page_layout.addWidget(self.connection_banner_label)
+
+        self.frame = QWidget(self.gfx_page)
+        self.frame.setObjectName("frame")
+        self.frame_layout = QVBoxLayout(self.frame)
+        self.frame_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_layout.setSpacing(10)
+
+        self.GraphicsFrame = self._section_frame(self.frame)
+        g_layout = QVBoxLayout(self.GraphicsFrame)
+        g_layout.setContentsMargins(12, 10, 12, 10)
+        g_layout.setSpacing(8)
+        self.graphics_label = self._section_label("Graphics Quality", self.GraphicsFrame)
+        g_layout.addWidget(self.graphics_label)
+
+        self.layoutWidget = QWidget(self.GraphicsFrame)
+        self.layoutWidget.setObjectName("layoutWidget")
+        self.GraphicsLayout = QHBoxLayout(self.layoutWidget)
+        self.GraphicsLayout.setContentsMargins(0, 0, 0, 0)
+        self.GraphicsLayout.setSpacing(8)
+        self.smooth_graphics_btn = QPushButton("Super Smooth", self.layoutWidget)
+        self.smooth_graphics_btn.setObjectName("smooth_graphics_btn")
+        self.smooth_graphics_btn.setCheckable(True)
+        self.balanced_graphics_btn = QPushButton("Smooth", self.layoutWidget)
+        self.balanced_graphics_btn.setObjectName("balanced_graphics_btn")
+        self.balanced_graphics_btn.setCheckable(True)
+        self.hd_graphics_btn = QPushButton("Balanced", self.layoutWidget)
+        self.hd_graphics_btn.setObjectName("hd_graphics_btn")
+        self.hd_graphics_btn.setCheckable(True)
+        self.hdr_graphics_btn = QPushButton("HD", self.layoutWidget)
+        self.hdr_graphics_btn.setObjectName("hdr_graphics_btn")
+        self.hdr_graphics_btn.setCheckable(True)
+        self.ultrahd_graphics_btn = QPushButton("HDR", self.layoutWidget)
+        self.ultrahd_graphics_btn.setObjectName("ultrahd_graphics_btn")
+        self.ultrahd_graphics_btn.setCheckable(True)
+        self.uhd_graphics_btn = QPushButton("Ultra HD", self.layoutWidget)
+        self.uhd_graphics_btn.setObjectName("uhd_graphics_btn")
+        self.uhd_graphics_btn.setCheckable(True)
+        for btn in [
+            self.smooth_graphics_btn,
+            self.balanced_graphics_btn,
+            self.hd_graphics_btn,
+            self.hdr_graphics_btn,
+            self.ultrahd_graphics_btn,
+            self.uhd_graphics_btn,
+        ]:
+            btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            self.GraphicsLayout.addWidget(btn)
+        g_layout.addWidget(self.layoutWidget)
+        self.frame_layout.addWidget(self.GraphicsFrame)
+
+        self.FramerateFrame = self._section_frame(self.frame)
+        fps_layout = QVBoxLayout(self.FramerateFrame)
+        fps_layout.setContentsMargins(12, 10, 12, 10)
+        fps_layout.setSpacing(8)
+        self.fps_label = self._section_label("Frame Rate", self.FramerateFrame)
+        fps_layout.addWidget(self.fps_label)
+
+        self.layoutWidget1 = QWidget(self.FramerateFrame)
+        self.layoutWidget1.setObjectName("layoutWidget1")
+        self.FramerateLayout = QHBoxLayout(self.layoutWidget1)
+        self.FramerateLayout.setContentsMargins(0, 0, 0, 0)
+        self.FramerateLayout.setSpacing(8)
+        self.low_fps_btn = QPushButton("Low", self.layoutWidget1)
+        self.low_fps_btn.setObjectName("low_fps_btn")
+        self.low_fps_btn.setCheckable(True)
+        self.medium_fps_btn = QPushButton("Medium", self.layoutWidget1)
+        self.medium_fps_btn.setObjectName("medium_fps_btn")
+        self.medium_fps_btn.setCheckable(True)
+        self.high_fps_btn = QPushButton("High", self.layoutWidget1)
+        self.high_fps_btn.setObjectName("high_fps_btn")
+        self.high_fps_btn.setCheckable(True)
+        self.ultra_fps_btn = QPushButton("Ultra", self.layoutWidget1)
+        self.ultra_fps_btn.setObjectName("ultra_fps_btn")
+        self.ultra_fps_btn.setCheckable(True)
+        self.extreme_fps_btn = QPushButton("Extreme", self.layoutWidget1)
+        self.extreme_fps_btn.setObjectName("extreme_fps_btn")
+        self.extreme_fps_btn.setCheckable(True)
+        self.fps90_fps_btn = QPushButton("Extreme+", self.layoutWidget1)
+        self.fps90_fps_btn.setObjectName("fps90_fps_btn")
+        self.fps90_fps_btn.setCheckable(True)
+        self.fps120_fps_btn = QPushButton("Ultra Extreme", self.layoutWidget1)
+        self.fps120_fps_btn.setObjectName("fps120_fps_btn")
+        self.fps120_fps_btn.setCheckable(True)
+
+        for btn in [
+            self.low_fps_btn,
+            self.medium_fps_btn,
+            self.high_fps_btn,
+            self.ultra_fps_btn,
+            self.extreme_fps_btn,
+            self.fps90_fps_btn,
+            self.fps120_fps_btn,
+        ]:
+            btn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+            self.FramerateLayout.addWidget(btn)
+        self.FramerateLayout.addStretch(1)
+        fps_layout.addWidget(self.layoutWidget1)
+        self.frame_layout.addWidget(self.FramerateFrame)
+
+        self.StyleFrame = self._section_frame(self.frame)
+        style_layout = QVBoxLayout(self.StyleFrame)
+        style_layout.setContentsMargins(12, 10, 12, 10)
+        style_layout.setSpacing(8)
+        self.style_label = self._section_label("Style", self.StyleFrame)
+        style_layout.addWidget(self.style_label)
+
+        self.layoutWidget2 = QWidget(self.StyleFrame)
+        self.layoutWidget2.setObjectName("layoutWidget2")
+        self.StyleLayout = QHBoxLayout(self.layoutWidget2)
+        self.StyleLayout.setContentsMargins(0, 0, 0, 0)
+        self.StyleLayout.setSpacing(10)
+
+        self.classic_style_btn = QPushButton("Classic", self.layoutWidget2)
+        self.classic_style_btn.setObjectName("classic_style_btn")
+        self.classic_style_btn.setCheckable(True)
+        self.classic_style_btn.setProperty("role", "style")
+        self.classic_style_btn.setIcon(QIcon(":/Graphics/Classic.png"))
+
+        self.colorful_style_btn = QPushButton("Colorful", self.layoutWidget2)
+        self.colorful_style_btn.setObjectName("colorful_style_btn")
+        self.colorful_style_btn.setCheckable(True)
+        self.colorful_style_btn.setProperty("role", "style")
+        self.colorful_style_btn.setIcon(QIcon(":/Graphics/Colorful.png"))
+
+        self.realistic_style_btn = QPushButton("Realistic", self.layoutWidget2)
+        self.realistic_style_btn.setObjectName("realistic_style_btn")
+        self.realistic_style_btn.setCheckable(True)
+        self.realistic_style_btn.setProperty("role", "style")
+        self.realistic_style_btn.setIcon(QIcon(":/Graphics/Realistic.png"))
+
+        self.soft_style_btn = QPushButton("Soft", self.layoutWidget2)
+        self.soft_style_btn.setObjectName("soft_style_btn")
+        self.soft_style_btn.setCheckable(True)
+        self.soft_style_btn.setProperty("role", "style")
+        self.soft_style_btn.setIcon(QIcon(":/Graphics/Soft.png"))
+
+        self.movie_style_btn = QPushButton("Movie", self.layoutWidget2)
+        self.movie_style_btn.setObjectName("movie_style_btn")
+        self.movie_style_btn.setCheckable(True)
+        self.movie_style_btn.setProperty("role", "style")
+        self.movie_style_btn.setIcon(QIcon(":/Graphics/Movie.png"))
+
+        for btn in [
+            self.classic_style_btn,
+            self.colorful_style_btn,
+            self.realistic_style_btn,
+            self.soft_style_btn,
+            self.movie_style_btn,
+        ]:
+            btn.setIconSize(QtCore.QSize(72, 72))
+            btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            self.StyleLayout.addWidget(btn)
+        style_layout.addWidget(self.layoutWidget2)
+        self.frame_layout.addWidget(self.StyleFrame)
+
+        shadow_row = QHBoxLayout()
+        shadow_row.setSpacing(10)
+
+        self.ShadowFrame = self._section_frame(self.frame)
+        shadow_layout = QVBoxLayout(self.ShadowFrame)
+        shadow_layout.setContentsMargins(12, 10, 12, 10)
+        shadow_layout.setSpacing(8)
+        self.shadow_label = self._section_label("Shadow", self.ShadowFrame)
+        shadow_layout.addWidget(self.shadow_label)
+        self.layoutWidget_2 = QWidget(self.ShadowFrame)
+        self.layoutWidget_2.setObjectName("layoutWidget_2")
+        self.ShadowLayout = QHBoxLayout(self.layoutWidget_2)
+        self.ShadowLayout.setContentsMargins(0, 0, 0, 0)
+        self.ShadowLayout.setSpacing(8)
+        self.disable_shadow_btn = QPushButton("Disable Shadow", self.layoutWidget_2)
+        self.disable_shadow_btn.setObjectName("disable_shadow_btn")
+        self.disable_shadow_btn.setCheckable(True)
+        self.enable_shadow_btn = QPushButton("Enable Shadow", self.layoutWidget_2)
+        self.enable_shadow_btn.setObjectName("enable_shadow_btn")
+        self.enable_shadow_btn.setCheckable(True)
+        self.ShadowLayout.addWidget(self.disable_shadow_btn)
+        self.ShadowLayout.addWidget(self.enable_shadow_btn)
+        shadow_layout.addWidget(self.layoutWidget_2)
+
+        self.ResolutionkrFrame = self._section_frame(self.frame)
+        res_layout = QVBoxLayout(self.ResolutionkrFrame)
+        res_layout.setContentsMargins(12, 10, 12, 10)
+        res_layout.setSpacing(8)
+        self.resolution_label = self._section_label("Resolution PUBG KR", self.ResolutionkrFrame)
+        self.resolution_btn = QPushButton("1080p", self.ResolutionkrFrame)
+        self.resolution_btn.setObjectName("resolution_btn")
+        self.resolution_btn.setCheckable(True)
+        res_layout.addWidget(self.resolution_label)
+        res_layout.addWidget(self.resolution_btn)
+
+        shadow_row.addWidget(self.ShadowFrame, 3)
+        shadow_row.addWidget(self.ResolutionkrFrame, 2)
+        self.frame_layout.addLayout(shadow_row)
+
+        page_layout.addWidget(self.frame, 1)
+
+        footer_layout = QHBoxLayout()
+        footer_layout.setSpacing(10)
+
+        self.PubgchooseFrame = self._section_frame(self.gfx_page)
+        pubg_choose_layout = QVBoxLayout(self.PubgchooseFrame)
+        pubg_choose_layout.setContentsMargins(10, 8, 10, 8)
+        pubg_choose_layout.setSpacing(6)
+        pubg_row = QHBoxLayout()
+        self.pubgchoose_dropdown = QComboBox(self.PubgchooseFrame)
+        self.pubgchoose_dropdown.setObjectName("pubgchoose_dropdown")
+        self.pubgchoose_btn = QPushButton("Use", self.PubgchooseFrame)
+        self.pubgchoose_btn.setObjectName("pubgchoose_btn")
+        pubg_row.addWidget(self.pubgchoose_dropdown, 1)
+        pubg_row.addWidget(self.pubgchoose_btn, 0)
+        self.pubgchoose_label = QLabel("Select game version", self.PubgchooseFrame)
+        self.pubgchoose_label.setObjectName("pubgchoose_label")
+        pubg_choose_layout.addLayout(pubg_row)
+        pubg_choose_layout.addWidget(self.pubgchoose_label)
+        footer_layout.addWidget(self.PubgchooseFrame, 1)
+
+        footer_layout.addStretch(1)
+
+        self.connect_gameloop_btn = QPushButton("Connect to GameLoop", self.gfx_page)
+        self.connect_gameloop_btn.setObjectName("connect_gameloop_btn")
+        self.connect_gameloop_btn.setProperty("class", "action")
+        self.connect_gameloop_btn.setProperty("id", "connectBtn")
+        self.connect_gameloop_btn.setObjectName("connectBtn")
+        self.connect_gameloop_btn.setCheckable(True)
+        self.connect_gameloop_btn.setMinimumWidth(230)
+
+        self.submit_gfx_btn = QPushButton("Submit Changes", self.gfx_page)
+        self.submit_gfx_btn.setObjectName("submitBtn")
+        self.submit_gfx_btn.setMinimumWidth(200)
+
+        footer_layout.addWidget(self.connect_gameloop_btn)
+        footer_layout.addWidget(self.submit_gfx_btn)
+
+        page_layout.addLayout(footer_layout)
+
+    def _build_optimizer_page(self):
+        self.other_page = QWidget()
+        self.other_page.setObjectName("other_page")
+        page_layout = QVBoxLayout(self.other_page)
+        page_layout.setContentsMargins(14, 12, 14, 12)
+        page_layout.setSpacing(10)
+
+        top_grid = QHBoxLayout()
+        top_grid.setSpacing(10)
+
+        left_box = self._section_frame(self.other_page)
+        left_layout = QVBoxLayout(left_box)
+        left_layout.setContentsMargins(12, 10, 12, 10)
+        left_layout.setSpacing(8)
+
+        self.optimizer_label = self._section_label("PC Optimizer", left_box)
+        left_layout.addWidget(self.optimizer_label)
+
+        self.tempcleaner_other_btn = QPushButton("Temp Cleaner", left_box)
+        self.tempcleaner_other_btn.setObjectName("tempcleaner_other_btn")
+        left_layout.addWidget(self.tempcleaner_other_btn)
+
+        self.gloptimizer_other_btn = QPushButton("Full Resource Boost", left_box)
+        self.gloptimizer_other_btn.setObjectName("gloptimizer_other_btn")
+        left_layout.addWidget(self.gloptimizer_other_btn)
+
+        priority_row = QHBoxLayout()
+        self.glpriority_dropdown = QComboBox(left_box)
+        self.glpriority_dropdown.setObjectName("glpriority_dropdown")
+        self.glpriority_dropdown.addItems(["High", "Realtime"])
+        self.glpriority_other_btn = QPushButton("Priority Boost", left_box)
+        self.glpriority_other_btn.setObjectName("glpriority_other_btn")
+        priority_row.addWidget(self.glpriority_other_btn, 2)
+        priority_row.addWidget(self.glpriority_dropdown, 1)
+        left_layout.addLayout(priority_row)
+
+        self.gllatency_other_btn = QPushButton("Latency Tweaks", left_box)
+        self.gllatency_other_btn.setObjectName("gllatency_other_btn")
+        left_layout.addWidget(self.gllatency_other_btn)
+
+        self.fpsstabilizer_other_btn = QPushButton("FPS Stabilizer", left_box)
+        self.fpsstabilizer_other_btn.setObjectName("fpsstabilizer_other_btn")
+        left_layout.addWidget(self.fpsstabilizer_other_btn)
+
+        engine_row = QHBoxLayout()
+        self.engine_ini_mode_dropdown = QComboBox(left_box)
+        self.engine_ini_mode_dropdown.setObjectName("engine_ini_mode_dropdown")
+        self.engine_ini_mode_dropdown.addItems(["Competitive", "Balanced"])
+        self.engine_ini_btn = QPushButton("Engine.ini Optimizer", left_box)
+        self.engine_ini_btn.setObjectName("engine_ini_btn")
+        engine_row.addWidget(self.engine_ini_btn, 2)
+        engine_row.addWidget(self.engine_ini_mode_dropdown, 1)
+        left_layout.addLayout(engine_row)
+
+        self.headshot_tweaks_btn = QPushButton("Headshot Tweaks", left_box)
+        self.headshot_tweaks_btn.setObjectName("headshot_tweaks_btn")
+        left_layout.addWidget(self.headshot_tweaks_btn)
+
+        exp_row = QHBoxLayout()
+        self.experimental_fps_dropdown = QComboBox(left_box)
+        self.experimental_fps_dropdown.setObjectName("experimental_fps_dropdown")
+        self.experimental_fps_dropdown.addItems(["144fps [EXP]", "165fps [EXP]", "200fps [EXP]"])
+        self.experimental_fps_btn = QPushButton("Experimental FPS", left_box)
+        self.experimental_fps_btn.setObjectName("experimental_fps_btn")
+        exp_row.addWidget(self.experimental_fps_btn, 2)
+        exp_row.addWidget(self.experimental_fps_dropdown, 1)
+        left_layout.addLayout(exp_row)
+
+        self.experimental_fps_label = QLabel("? Experimental - may not work on all devices", left_box)
+        self.experimental_fps_label.setObjectName("experimental_fps_label")
+        self.experimental_fps_label.setStyleSheet("color: #ffaa44;")
+        left_layout.addWidget(self.experimental_fps_label)
+
+        self.all_other_btn = QPushButton("Apply ALL ??", left_box)
+        self.all_other_btn.setObjectName("all_other_btn")
+        left_layout.addWidget(self.all_other_btn)
+
+        left_layout.addStretch(1)
+
+        right_col = QVBoxLayout()
+        right_col.setSpacing(10)
+
+        network_box = self._section_frame(self.other_page)
+        network_layout = QVBoxLayout(network_box)
+        network_layout.setContentsMargins(12, 10, 12, 10)
+        network_layout.setSpacing(8)
+        self.dns_label = self._section_label("Network", network_box)
+        network_layout.addWidget(self.dns_label)
+        dns_row = QHBoxLayout()
+        self.dns_dropdown = QComboBox(network_box)
+        self.dns_dropdown.setObjectName("dns_dropdown")
+        self.dns_dropdown.addItems([
+            "Google DNS - 8.8.8.8",
+            "Cloudflare DNS - 1.1.1.1",
+            "Quad9 DNS - 9.9.9.9",
+            "Cisco Umbrella - 208.67.222.222",
+            "Yandex DNS - 77.88.8.1",
+        ])
+        self.dns_other_btn = QPushButton("Apply DNS", network_box)
+        self.dns_other_btn.setObjectName("dns_other_btn")
+        dns_row.addWidget(self.dns_dropdown, 2)
+        dns_row.addWidget(self.dns_other_btn, 1)
+        network_layout.addLayout(dns_row)
+        self.dns_status_label = QLabel("Ping: --", network_box)
+        self.dns_status_label.setObjectName("dns_status_label")
+        network_layout.addWidget(self.dns_status_label)
+
+        shortcut_box = self._section_frame(self.other_page)
+        shortcut_layout = QVBoxLayout(shortcut_box)
+        shortcut_layout.setContentsMargins(12, 10, 12, 10)
+        shortcut_layout.setSpacing(8)
+        self.shortcut_label = self._section_label("Game Shortcut", shortcut_box)
+        shortcut_layout.addWidget(self.shortcut_label)
+        shortcut_row = QHBoxLayout()
+        self.shortcut_dropdown = QComboBox(shortcut_box)
+        self.shortcut_dropdown.setObjectName("shortcut_dropdown")
+        self.shortcut_dropdown.addItems([
+            "PUBG Mobile Global",
+            "PUBG Mobile VN",
+            "PUBG Mobile TW",
+            "PUBG Mobile KR",
+            "Battlegrounds Mobile India",
+        ])
+        self.shortcut_other_btn = QPushButton("Create Desktop Icon", shortcut_box)
+        self.shortcut_other_btn.setObjectName("shortcut_other_btn")
+        shortcut_row.addWidget(self.shortcut_dropdown, 2)
+        shortcut_row.addWidget(self.shortcut_other_btn, 1)
+        shortcut_layout.addLayout(shortcut_row)
+
+        right_col.addWidget(network_box)
+        right_col.addWidget(shortcut_box)
+        right_col.addStretch(1)
+
+        top_grid.addWidget(left_box, 3)
+        top_grid.addLayout(right_col, 2)
+        page_layout.addLayout(top_grid, 1)
+
+        ipad_box = self._section_frame(self.other_page)
+        ipad_layout = QVBoxLayout(ipad_box)
+        ipad_layout.setContentsMargins(12, 10, 12, 10)
+        ipad_layout.setSpacing(8)
+        self.ipad_label = self._section_label("iPad / Resolution", ipad_box)
+        ipad_layout.addWidget(self.ipad_label)
+
+        ipad_row = QHBoxLayout()
+        self.ipad_dropdown = QComboBox(ipad_box)
+        self.ipad_dropdown.setObjectName("ipad_dropdown")
+        self.ipad_dropdown.addItems(["Smart 720P", "Smart 1080P", "Smart 2K", "Custom"])
+        self.ipad_other_btn = QPushButton("Apply", ipad_box)
+        self.ipad_other_btn.setObjectName("ipad_other_btn")
+        self.ipad_rest_btn = QPushButton("Reset", ipad_box)
+        self.ipad_rest_btn.setObjectName("ipad_rest_btn")
+        ipad_row.addWidget(self.ipad_dropdown, 2)
+        ipad_row.addWidget(self.ipad_other_btn, 1)
+        ipad_row.addWidget(self.ipad_rest_btn, 1)
+        ipad_layout.addLayout(ipad_row)
+
+        self.ipad_code = QLineEdit(ipad_box)
+        self.ipad_code.setObjectName("ipad_code")
+        self.ipad_code.setReadOnly(True)
+        self.ipad_code_label = QLabel("Current Code", ipad_box)
+        self.ipad_code_label.setObjectName("ipad_code_label")
+        ipad_layout.addWidget(self.ipad_code_label)
+        ipad_layout.addWidget(self.ipad_code)
+
+        page_layout.addWidget(ipad_box)
+
+        self.forceclosegl_other_btn = QPushButton("Force Close GameLoop", self.other_page)
+        self.forceclosegl_other_btn.setObjectName("forceCloseBtn")
+        page_layout.addWidget(self.forceclosegl_other_btn)
+
+        self.line = QFrame(self.other_page)
+        self.line.setObjectName("line")
+        self.line.setFrameShape(QFrame.NoFrame)
+
+    def _build_about_page(self):
+        self.about_page = QWidget()
+        self.about_page.setObjectName("about_page")
+        layout = QVBoxLayout(self.about_page)
+        layout.setContentsMargins(40, 30, 40, 30)
+        layout.setSpacing(16)
+
+        layout.addStretch(1)
+
+        card = self._section_frame(self.about_page)
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(16, 14, 16, 14)
+        card_layout.setSpacing(8)
+
+        self.about_label_text = QLabel(card)
+        self.about_label_text.setObjectName("about_label_text")
+        self.about_label_text.setAlignment(Qt.AlignCenter)
+        self.about_label_text.setWordWrap(True)
+        card_layout.addWidget(self.about_label_text)
+
+        features = QLabel(card)
+        features.setWordWrap(True)
+        features.setText(
+            "? Unlock locked graphics (Extreme HDR, Ultra HD)\n"
+            "? Engine.ini optimization for headshot clarity\n"
+            "? GameLoop full resource allocation\n"
+            "? Windows latency tweaks + service optimization\n"
+            "? FPS stabilizer (never drops)\n"
+            "? DNS optimization for lower ping\n"
+            "? iPad view layout\n"
+            "? Desktop shortcut creator"
+        )
+        features.setObjectName("sectionBox")
+        features.setStyleSheet("padding: 12px;")
+        card_layout.addWidget(features)
+
+        links_row = QHBoxLayout()
+        links_row.addStretch(1)
+        self.github_btn = QPushButton("GitHub", card)
+        self.github_btn.setObjectName("github_btn")
+        self.report_bug_btn = QPushButton("Report Bug", card)
+        self.report_bug_btn.setObjectName("report_bug_btn")
+        self.discord_btn = QPushButton("Discord", card)
+        self.discord_btn.setObjectName("discord_btn")
+        links_row.addWidget(self.github_btn)
+        links_row.addWidget(self.report_bug_btn)
+        links_row.addWidget(self.discord_btn)
+        links_row.addStretch(1)
+        card_layout.addLayout(links_row)
+
+        layout.addWidget(card)
+        layout.addStretch(1)
+
+        self.label_8 = QLabel(self.about_page)
+        self.label_8.hide()
+
+    def _build_status_bar(self):
+        self.statusBarFrame = QFrame(self.centralwidget)
+        self.statusBarFrame.setObjectName("statusBar")
+        s_layout = QHBoxLayout(self.statusBarFrame)
+        s_layout.setContentsMargins(10, 6, 10, 6)
+        s_layout.setSpacing(8)
+
+        self.appstatus_label = QLabel("Status:", self.statusBarFrame)
+        self.appstatus_label.setObjectName("appstatus_label")
+        self.appstatus_text_lable = QLabel("? Ready", self.statusBarFrame)
+        self.appstatus_text_lable.setObjectName("appstatus_text_lable")
+
+        s_layout.addWidget(self.appstatus_label)
+        s_layout.addWidget(self.appstatus_text_lable, 1)
+        self.rootLayout.addWidget(self.statusBarFrame)
 
     def retranslateUi(self, MainWindow):
-            MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"EX Tool v0.1", None))
-            self.appbackground.setText("")
-            self.gfx_page_background.setText("")
-            self.submit_gfx_btn.setText(QCoreApplication.translate("MainWindow", u"Submit", None))
-            # if QT_CONFIG(tooltip)
-            self.connect_gameloop_btn.setToolTip(
-                    QCoreApplication.translate("MainWindow", u"Click here to connect to Gameloop", None))
-            # endif // QT_CONFIG(tooltip)
-            self.connect_gameloop_btn.setText(QCoreApplication.translate("MainWindow", u"Connect to Gameloop", None))
-            self.pubgchoose_btn.setText(QCoreApplication.translate("MainWindow", u"Use", None))
-            self.pubgchoose_label.setText(
-                    QCoreApplication.translate("MainWindow", u"Select the game version you need to use.", None))
-            self.graphics_label.setText(QCoreApplication.translate("MainWindow", u"Graphics", None))
-            self.smooth_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"Super Smooth", None))
-            self.balanced_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"Smooth", None))
-            self.hd_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"Balanced", None))
-            self.hdr_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"HD", None))
-            self.ultrahd_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"HDR", None))
-            self.uhd_graphics_btn.setText(QCoreApplication.translate("MainWindow", u"Ultra HD", None))
-            self.fps_label.setText(QCoreApplication.translate("MainWindow", u"Frame Rate", None))
-            self.low_fps_btn.setText(QCoreApplication.translate("MainWindow", u"Low", None))
-            self.medium_fps_btn.setText(QCoreApplication.translate("MainWindow", u"Medium", None))
-            self.high_fps_btn.setText(QCoreApplication.translate("MainWindow", u"High", None))
-            self.ultra_fps_btn.setText(QCoreApplication.translate("MainWindow", u"Ultra", None))
-            self.extreme_fps_btn.setText(QCoreApplication.translate("MainWindow", u"Extreme", None))
-            self.fps90_fps_btn.setText(QCoreApplication.translate("MainWindow", u"Extreme+", None))
-            self.fps120_fps_btn.setText(QCoreApplication.translate("MainWindow", u"Ultra Extreme", None))
-            self.style_label.setText(QCoreApplication.translate("MainWindow", u"Style", None))
-            self.shadow_label.setText(QCoreApplication.translate("MainWindow", u"Shadow", None))
-            # if QT_CONFIG(tooltip)
-            self.disable_shadow_btn.setToolTip(QCoreApplication.translate("MainWindow", u"Soon Can Edit", None))
-            # endif // QT_CONFIG(tooltip)
-            self.disable_shadow_btn.setText(QCoreApplication.translate("MainWindow", u"Disable", None))
-            # if QT_CONFIG(tooltip)
-            self.enable_shadow_btn.setToolTip(QCoreApplication.translate("MainWindow", u"Soon Can Edit", None))
-            # endif // QT_CONFIG(tooltip)
-            self.enable_shadow_btn.setText(QCoreApplication.translate("MainWindow", u"Enable", None))
-            self.resolution_label.setText(QCoreApplication.translate("MainWindow", u"Resolution PUBG KR", None))
-            self.resolution_btn.setText(QCoreApplication.translate("MainWindow", u"1080p", None))
-            self.other_page_background.setText("")
-            # if QT_CONFIG(tooltip)
-            self.tempcleaner_other_btn.setToolTip(
-                    QCoreApplication.translate("MainWindow", u"Clean temporary files and boost system performance.",
-                                               None))
-            # endif // QT_CONFIG(tooltip)
-            self.tempcleaner_other_btn.setText(QCoreApplication.translate("MainWindow", u"Temp Cleaner", None))
-            # if QT_CONFIG(tooltip)
-            self.glsmartsettings_other_btn.setToolTip(
-                    QCoreApplication.translate("MainWindow", u"Get the perfect Gameloop settings for your PC hardware.",
-                                               None))
-            # endif // QT_CONFIG(tooltip)
-            self.glsmartsettings_other_btn.setText(
-                    QCoreApplication.translate("MainWindow", u"Gameloop Smart Settings (Beta)", None))
-            # if QT_CONFIG(tooltip)
-            self.gloptimizer_other_btn.setToolTip(
-                    QCoreApplication.translate("MainWindow", u"<html><head/><body><p>1- Optimize Gameloop Registry in\n"
-                                                             "                                Windows. </p><p>2- Nvidia Optimizer (Nvidia GPU). </p><p>3- Add\n"
-                                                             "                                to Exclusion List for faster game startup.</p></body></html>\n"
-                                                             "                            ", None))
-            # endif // QT_CONFIG(tooltip)
-            self.gloptimizer_other_btn.setText(QCoreApplication.translate("MainWindow", u"Gameloop Optimizer", None))
-            # if QT_CONFIG(tooltip)
-            self.glpriority_other_btn.setToolTip(
-                    QCoreApplication.translate("MainWindow",
-                                               u"Boost Gameloop priority and allocate more CPU/RAM.",
-                                               None))
-            # endif // QT_CONFIG(tooltip)
-            self.glpriority_other_btn.setText(QCoreApplication.translate("MainWindow", u"Gameloop Priority Boost", None))
-            self.glpriority_dropdown.setItemText(0, QCoreApplication.translate("MainWindow", u"High", None))
-            self.glpriority_dropdown.setItemText(1, QCoreApplication.translate("MainWindow", u"Realtime", None))
-            # if QT_CONFIG(tooltip)
-            self.gllatency_other_btn.setToolTip(
-                    QCoreApplication.translate("MainWindow",
-                                               u"Apply Windows latency tweaks for smoother 120 FPS.",
-                                               None))
-            # endif // QT_CONFIG(tooltip)
-            self.gllatency_other_btn.setText(QCoreApplication.translate("MainWindow", u"Latency Tweaks (120 FPS)", None))
-            # if QT_CONFIG(tooltip)
-            self.all_other_btn.setToolTip(QCoreApplication.translate("MainWindow",
-                                                                     u"<html><head/><body><p align=\"center\">Temp Cleaner</p><p\n"
-                                                                     "                                align=\"center\">Gameloop Smart Settings</p><p align=\"center\">Gameloop\n"
-                                                                     "                                Optimizer</p><p align=\"center\">&gt;&gt; One-click Magic\n"
-                                                                     "                                &lt;&lt;</p></body></html>\n"
-                                                                     "                            ", None))
-            # endif // QT_CONFIG(tooltip)
-            self.all_other_btn.setText(QCoreApplication.translate("MainWindow", u"\u2b06\ufe0f All \u2b06\ufe0f", None))
-            # if QT_CONFIG(tooltip)
-            self.forceclosegl_other_btn.setToolTip(
-                    QCoreApplication.translate("MainWindow", u"Force Kill Gameloop Processes.", None))
-            # endif // QT_CONFIG(tooltip)
-            self.forceclosegl_other_btn.setText(QCoreApplication.translate("MainWindow", u"Force Close Gameloop", None))
-            self.dns_dropdown.setItemText(0, QCoreApplication.translate("MainWindow", u"Google DNS - 8.8.8.8", None))
-            self.dns_dropdown.setItemText(1,
-                                          QCoreApplication.translate("MainWindow", u"Cloudflare DNS - 1.1.1.1", None))
-            self.dns_dropdown.setItemText(2, QCoreApplication.translate("MainWindow", u"Quad9 DNS - 9.9.9.9", None))
-            self.dns_dropdown.setItemText(3,
-                                          QCoreApplication.translate("MainWindow", u"Cisco Umbrella - 208.67.222.222",
-                                                                     None))
-            self.dns_dropdown.setItemText(4, QCoreApplication.translate("MainWindow", u"Yandex DNS - 77.88.8.1", None))
+        MainWindow.setWindowTitle("EX Tool v0.2")
+        self.appname_label.setText("EX Tool v0.2")
+        self.gfx_button.setText("GFX")
+        self.other_button.setText("OPTIMIZER")
+        self.about_button.setText("ABOUT")
+        self.connection_banner_label.setText("Connect to GameLoop first to enable settings")
 
-            self.shortcut_dropdown.setItemText(0, QCoreApplication.translate("MainWindow", u"PUBG Mobile Global", None))
-            self.shortcut_dropdown.setItemText(1, QCoreApplication.translate("MainWindow", u"PUBG Mobile VN", None))
-            self.shortcut_dropdown.setItemText(2, QCoreApplication.translate("MainWindow", u"PUBG Mobile TW", None))
-            self.shortcut_dropdown.setItemText(3, QCoreApplication.translate("MainWindow", u"PUBG Mobile KR", None))
-            self.shortcut_dropdown.setItemText(4,
-                                               QCoreApplication.translate("MainWindow", u"Battlegrounds Mobile India",
-                                                                          None))
-
-            self.optimizer_label.setText(QCoreApplication.translate("MainWindow", u"Optimizer", None))
-            # if QT_CONFIG(tooltip)
-            self.shortcut_other_btn.setToolTip(QCoreApplication.translate("MainWindow",
-                                                                          u"Click here to create a shortcut for your game on the desktop",
-                                                                          None))
-            # endif // QT_CONFIG(tooltip)
-            self.shortcut_other_btn.setText(QCoreApplication.translate("MainWindow", u"Create Shortcut", None))
-            self.shortcut_label.setText(QCoreApplication.translate("MainWindow", u"Shortcut Maker", None))
-            self.dns_label.setText(QCoreApplication.translate("MainWindow", u"DNS Changer", None))
-            # if QT_CONFIG(tooltip)
-            self.dns_other_btn.setToolTip(
-                    QCoreApplication.translate("MainWindow", u"Click here to change your DNS settings", None))
-            # endif // QT_CONFIG(tooltip)
-            self.dns_other_btn.setText(QCoreApplication.translate("MainWindow", u"Change DNS", None))
-            self.dns_status_label.setText("")
-            self.ipad_label.setText(QCoreApplication.translate("MainWindow", u"IPad View", None))
-            # if QT_CONFIG(tooltip)
-            self.ipad_other_btn.setToolTip(
-                    QCoreApplication.translate("MainWindow", u"Click here to change your DNS settings", None))
-            # endif // QT_CONFIG(tooltip)
-            self.ipad_other_btn.setText(QCoreApplication.translate("MainWindow", u"Change Resolution", None))
-            self.ipad_dropdown.setItemText(0, QCoreApplication.translate("MainWindow", u"1920 x 1440", None))
-            self.ipad_dropdown.setItemText(1, QCoreApplication.translate("MainWindow", u"1600 x 1200", None))
-            self.ipad_dropdown.setItemText(2, QCoreApplication.translate("MainWindow", u"1440 x 1080", None))
-            self.ipad_dropdown.setItemText(3, QCoreApplication.translate("MainWindow", u"1280 x 960", None))
-
-            # if QT_CONFIG(tooltip)
-            self.ipad_code.setToolTip(
-                    QCoreApplication.translate("MainWindow", u"The layout code is provided here", None))
-            # endif // QT_CONFIG(tooltip)
-            self.ipad_code.setText("")
-            self.ipad_code_label.setText("")
-            # if QT_CONFIG(tooltip)
-            self.ipad_rest_btn.setToolTip(
-                    QCoreApplication.translate("MainWindow", u"Click here to change your DNS settings", None))
-            # endif // QT_CONFIG(tooltip)
-            self.ipad_rest_btn.setText(QCoreApplication.translate("MainWindow", u"Reset Resolution", None))
-            self.label_8.setText("")
-            self.about_label_text.setText(QCoreApplication.translate("MainWindow",
-                                                                     u"<h2>EX Tool v0.1 \u2014 PUBG Mobile Optimizer</h2>\n"
-                                                                     "\n"
-                                                                     "                                <h3>Features:</h3>\n"
-                                                                     "                                <ul>\n"
-                                                                     "                                <li>Universal compatibility for all PUBG Mobile versions.</li>\n"
-                                                                     "                                <li>Graphics enhancement for smoother visuals.</li>\n"
-                                                                     "                                <li>Unlock locked graphics settings for higher customization.</li>\n"
-                                                                     "                                <li>Gameloop and PC optimization for peak performance.</li>\n"
-                                                                     "                                <li>Quick desktop shortcut creation.</li>\n"
-                                                                     "                                <li>DNS changer for optimized network connectivity.</li>\n"
-                                                                     "                                <li>iPad view for an immersive gaming experience.</li>\n"
-                                                                     "                                </ul>\n"
-                                                                     "\n"
-                                                                     "                                <center>\n"
-                                                                     "                                <p>Level up your gaming experience today!</p>\n"
-                                                                     "                                </center>\n"
-                                                                     "                            ", None))
-            self.appname_label.setText(QCoreApplication.translate("MainWindow", u"EX Tool v0.1", None))
-            self.appstatus_label.setText(QCoreApplication.translate("MainWindow", u"Status:", None))
-            self.appstatus_text_lable.setText("")
-            self.close_btn.setText(QCoreApplication.translate("MainWindow", u"X", None))
-            self.minimize_btn.setText(QCoreApplication.translate("MainWindow", u"-", None))
-            self.gfx_button.setText(QCoreApplication.translate("MainWindow", u"GFX", None))
-            self.other_button.setText(QCoreApplication.translate("MainWindow", u"Other", None))
-            self.about_button.setText(QCoreApplication.translate("MainWindow", u"About", None))
-    # retranslateUi
