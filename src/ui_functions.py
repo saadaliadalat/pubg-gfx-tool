@@ -16,22 +16,17 @@ class Window(QtWidgets.QMainWindow, Game):
         self._drag_origin = None
 
         self.setWindowFlag(QtCore.Qt.WindowType.FramelessWindowHint)
-        self.setMinimumSize(1280, 800)
-        self.resize(1280, 800)
+        try:
+            self._zoom = float(self.settings.value("zoom_factor", self.settings.value("ui_zoom", 1.0)))
+        except (TypeError, ValueError):
+            self._zoom = 1.0
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.appname_label.setText(f"{app_name} {app_version}")
 
         self._wire_core_ui()
-
-        # Restore preferred zoom and center window.
-        self._base_font_size = 10.0
-        self._base_width = 1280
-        self._base_height = 800
-        zoom = float(self.settings.value("ui_zoom", 1.0))
-        self.apply_zoom(zoom, save=False)
-        self._center_on_screen()
+        self._apply_zoom(self._zoom)
 
         self.GFX = GFX(self)
         self.Other = Other(self)
@@ -47,9 +42,9 @@ class Window(QtWidgets.QMainWindow, Game):
         self.ui.close_btn.clicked.connect(self.close)
         self.ui.minimize_btn.clicked.connect(lambda: self.setWindowState(QtCore.Qt.WindowMinimized))
 
-        self.ui.zoom75_btn.clicked.connect(lambda: self.apply_zoom(0.75))
-        self.ui.zoom100_btn.clicked.connect(lambda: self.apply_zoom(1.0))
-        self.ui.zoom125_btn.clicked.connect(lambda: self.apply_zoom(1.25))
+        self.ui.zoom75_btn.clicked.connect(lambda: self._apply_zoom(0.75))
+        self.ui.zoom100_btn.clicked.connect(lambda: self._apply_zoom(1.0))
+        self.ui.zoom125_btn.clicked.connect(lambda: self._apply_zoom(1.25))
         for btn in [self.ui.zoom75_btn, self.ui.zoom100_btn, self.ui.zoom125_btn]:
             btn.setCheckable(True)
 
@@ -75,24 +70,26 @@ class Window(QtWidgets.QMainWindow, Game):
         self.ui.about_button.setChecked(button == self.ui.about_button)
         self.ui.stackedWidget.setCurrentWidget(page)
 
-    def apply_zoom(self, factor, save=True):
-        """Scale UI for different screens."""
+    def _apply_zoom(self, factor):
+        """Apply zoom by scaling base window size and application font."""
         factor = max(0.75, min(1.25, float(factor)))
+        self._zoom = factor
+        self.settings.setValue("zoom_factor", factor)
 
-        font = self.font()
-        font.setPointSizeF(self._base_font_size * factor)
-        self.setFont(font)
+        base_w, base_h = 1100, 700
+        width = int(base_w * factor)
+        height = int(base_h * factor)
+        self.setFixedSize(width, height)
 
-        width = int(self._base_width * factor)
-        height = int(self._base_height * factor)
-        self.resize(max(1280, width), max(800, height))
+        font = QtWidgets.QApplication.font()
+        font.setPointSizeF(9.5 * factor)
+        QtWidgets.QApplication.setFont(font)
 
-        if save:
-            self.settings.setValue("ui_zoom", factor)
+        self._center_on_screen()
 
-        self.ui.zoom75_btn.setChecked(abs(factor - 0.75) < 0.01)
-        self.ui.zoom100_btn.setChecked(abs(factor - 1.0) < 0.01)
-        self.ui.zoom125_btn.setChecked(abs(factor - 1.25) < 0.01)
+        self.ui.zoom75_btn.setChecked(abs(self._zoom - 0.75) < 0.01)
+        self.ui.zoom100_btn.setChecked(abs(self._zoom - 1.0) < 0.01)
+        self.ui.zoom125_btn.setChecked(abs(self._zoom - 1.25) < 0.01)
 
     def show_status_message(self, message, duration=5, msg_type="info"):
         """Enhanced status with color coding."""
@@ -141,9 +138,6 @@ class Window(QtWidgets.QMainWindow, Game):
             "movie_style_btn",
             "disable_shadow_btn",
             "enable_shadow_btn",
-            "beast_mode_btn",
-            "competitive_mode_btn",
-            "streamer_mode_btn",
         ]
 
         for widget_name in adb_required:

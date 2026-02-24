@@ -4,6 +4,7 @@ import subprocess
 import sys
 import winreg
 import xml.etree.ElementTree as ET
+from pathlib import Path
 from shutil import copy
 from time import sleep
 
@@ -31,6 +32,10 @@ class Settings:
             "com.pubg.imobile": "Battlegrounds Mobile India"}
         self.logger = setup_logger('error_logger', 'error.log')
 
+        app_data_root = os.getenv("APPDATA") or str(Path.home() / "AppData" / "Roaming")
+        self.app_data_dir = Path(app_data_root) / "EX Tool" / "assets"
+        self.app_data_dir.mkdir(parents=True, exist_ok=True)
+
     @staticmethod
     def kill_adb():
         """
@@ -45,8 +50,13 @@ class Settings:
     # Get Script Run Location
     @staticmethod
     def resource_path(relative_path):
+        """Get path to bundled read-only assets (PyInstaller-safe)."""
         base_path = getattr(sys, '_MEIPASS', os.path.abspath('.'))
         return os.path.join(base_path, relative_path)
+
+    def writable_path(self, filename):
+        """Get path to writable persistent file under %APPDATA%."""
+        return str(self.app_data_dir / filename)
 
 
 class Registry(Settings):
@@ -981,7 +991,7 @@ class Game(Optimizer):
             while not self.adb.shell("getprop dev.bootcomplete"):
                 pass
 
-            self.adb.sync.pull("/default.prop", self.resource_path(r'assets\device_probe.bin'))
+            self.adb.sync.pull("/default.prop", self.writable_path("device_probe.bin"))
             self.is_adb_working = True
 
         except Exception as e:
@@ -1002,7 +1012,7 @@ class Game(Optimizer):
 
     def get_graphics_file(self, package: str):
         active_savegames_path = f"/sdcard/Android/data/{package}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/SaveGames/Active.sav"
-        local_file_path = self.resource_path('assets/active_original.bin')
+        local_file_path = self.writable_path("active_original.bin")
         self.pubg_package = package
         self.adb.sync.pull(active_savegames_path, local_file_path)
 
@@ -1010,7 +1020,7 @@ class Game(Optimizer):
             self.active_sav_content = file.read()
 
     def save_graphics_file(self):
-        file_path = self.resource_path("assets/active_modified.bin")
+        file_path = self.writable_path("active_modified.bin")
         with open(file_path, 'wb') as file:
             file.write(self.active_sav_content)
 
@@ -1126,12 +1136,14 @@ r.Fog=1
 foliage.DensityScale=0.6
 """
 
-        local_path = self.resource_path(r'assets\engine_custom.ini')
+        local_path = self.writable_path("engine_custom.ini")
         with open(local_path, 'w', encoding='utf-8') as f:
             f.write(content)
 
-        self.adb.sync.push(local_path, engine_ini_path)
-        return True
+        if os.path.exists(local_path):
+            self.adb.sync.push(local_path, engine_ini_path)
+            return True
+        return False
 
     def reset_engine_ini(self):
         """Reset Engine.ini to default."""
@@ -1139,11 +1151,13 @@ foliage.DensityScale=0.6
             f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/"
             f"ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/Engine.ini"
         )
-        local_path = self.resource_path(r'assets\engine_custom.ini')
+        local_path = self.writable_path("engine_custom.ini")
         with open(local_path, 'w', encoding='utf-8') as f:
             f.write("[SystemSettings]\n; Reset by EX Tool\n")
-        self.adb.sync.push(local_path, engine_ini_path)
-        return True
+        if os.path.exists(local_path):
+            self.adb.sync.push(local_path, engine_ini_path)
+            return True
+        return False
 
     def push_game_user_settings(self, resolution_x=1280, resolution_y=720, fps_limit=120):
         """
@@ -1171,12 +1185,14 @@ DefaultFeature.AmbientOcclusion=False
 DefaultFeature.MotionBlur=False
 """
 
-        local_path = self.resource_path(r'assets\game_user_settings.ini')
+        local_path = self.writable_path("game_user_settings.ini")
         with open(local_path, 'w', encoding='utf-8') as f:
             f.write(content)
 
-        self.adb.sync.push(local_path, path)
-        return True
+        if os.path.exists(local_path):
+            self.adb.sync.push(local_path, path)
+            return True
+        return False
 
     def read_hex(self, name):
         """
@@ -1235,17 +1251,18 @@ DefaultFeature.MotionBlur=False
         Gets the shadow value from the UserCustom.ini file.
         """
         shadow_name = None
+        local_ini_path = self.writable_path("user_custom.ini")
         user_custom_ini_path = f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
-        self.adb.sync.pull(user_custom_ini_path, self.resource_path(r'assets\user_custom.ini'))
+        self.adb.sync.pull(user_custom_ini_path, local_ini_path)
 
-        with open(self.resource_path(r"assets\user_custom.ini")) as file:
+        with open(local_ini_path, encoding="utf-8", errors="ignore") as file:
             for line in file:
                 line = line.strip()
                 if line.startswith("+CVars=0B572A11181D160E280C1815100D0044"):
                     if int(line[-2:]) == 49:
-                        shadow_name = "Disable"
+                        shadow_name = "Disable Shadow"
                     elif int(line[-2:]) == 48:
-                        shadow_name = "Enable"
+                        shadow_name = "Enable Shadow"
                     break
 
         return shadow_name
@@ -1260,6 +1277,8 @@ DefaultFeature.MotionBlur=False
             "off": 49,
             "enable": 48,
             "disable": 49,
+            "enable shadow": 48,
+            "disable shadow": 49,
         }.get(normalized)
         if shadow_value is None:
             return False
@@ -1268,7 +1287,7 @@ DefaultFeature.MotionBlur=False
             f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/ShadowTrackerExtra/"
             f"ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
         )
-        local_ini_path = self.resource_path(r"assets\user_custom.ini")
+        local_ini_path = self.writable_path("user_custom.ini")
 
         try:
             self.adb.sync.pull(user_custom_ini_path, local_ini_path)
@@ -1303,6 +1322,8 @@ DefaultFeature.MotionBlur=False
         try:
             with open(local_ini_path, "w", encoding="utf-8", errors="ignore") as file:
                 file.writelines(lines)
+            if not os.path.exists(local_ini_path):
+                return False
             self.adb.sync.push(local_ini_path, user_custom_ini_path)
             return True
         except Exception:
@@ -1362,9 +1383,10 @@ DefaultFeature.MotionBlur=False
     def apply_pc_ultra_cvars(self):
         """Apply PC-specific ultra graphics CVars to UserCustom.ini"""
         user_custom_path = f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
+        local_ini_path = self.writable_path("user_custom.ini")
 
         # Pull current file
-        self.adb.sync.pull(user_custom_path, self.resource_path(r'assets\user_custom.ini'))
+        self.adb.sync.pull(user_custom_path, local_ini_path)
 
         # PC Ultra CVars for maximum graphics
         pc_ultra_cvars = [
@@ -1383,7 +1405,7 @@ DefaultFeature.MotionBlur=False
         ]
 
         # Read existing content
-        with open(self.resource_path(r'assets\user_custom.ini'), 'r') as f:
+        with open(local_ini_path, 'r', encoding='utf-8', errors='ignore') as f:
             content = f.read()
 
         # Remove old PC CVars if they exist
@@ -1401,20 +1423,22 @@ DefaultFeature.MotionBlur=False
             content = '\n'.join(new_lines)
 
         # Add PC CVars at the end
-        with open(self.resource_path(r'assets\user_custom.ini'), 'w') as f:
+        with open(local_ini_path, 'w', encoding='utf-8', errors='ignore') as f:
             f.write(content.rstrip() + '\n\n')
             for cvar in pc_ultra_cvars:
                 f.write(cvar + '\n')
 
         # Push back to device
-        self.adb.sync.push(self.resource_path(r'assets\user_custom.ini'), user_custom_path)
+        if os.path.exists(local_ini_path):
+            self.adb.sync.push(local_ini_path, user_custom_path)
 
     def apply_competitive_cvars(self):
         """Apply competitive visibility CVars (grass reduction, fog removal)"""
         user_custom_path = f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/Config/Android/UserCustom.ini"
+        local_ini_path = self.writable_path("user_custom.ini")
 
         # Pull current file
-        self.adb.sync.pull(user_custom_path, self.resource_path(r'assets\user_custom.ini'))
+        self.adb.sync.pull(user_custom_path, local_ini_path)
 
         # Competitive CVars for maximum visibility
         competitive_cvars = [
@@ -1431,7 +1455,7 @@ DefaultFeature.MotionBlur=False
         ]
 
         # Read existing content
-        with open(self.resource_path(r'assets\user_custom.ini'), 'r') as f:
+        with open(local_ini_path, 'r', encoding='utf-8', errors='ignore') as f:
             content = f.read()
 
         # Remove old competitive CVars if they exist
@@ -1449,13 +1473,14 @@ DefaultFeature.MotionBlur=False
             content = '\n'.join(new_lines)
 
         # Add competitive CVars at the end
-        with open(self.resource_path(r'assets\user_custom.ini'), 'w') as f:
+        with open(local_ini_path, 'w', encoding='utf-8', errors='ignore') as f:
             f.write(content.rstrip() + '\n\n')
             for cvar in competitive_cvars:
                 f.write(cvar + '\n')
 
         # Push back to device
-        self.adb.sync.push(self.resource_path(r'assets\user_custom.ini'), user_custom_path)
+        if os.path.exists(local_ini_path):
+            self.adb.sync.push(local_ini_path, user_custom_path)
 
     def set_pc_ultra_graphics(self):
         """PC-only ultra graphics settings via Gameloop registry"""
@@ -1551,13 +1576,14 @@ DefaultFeature.MotionBlur=False
         data_dir = f"/sdcard/Android/data/{self.pubg_package}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved"
 
         files = [
-            (self.resource_path(r"assets\active_modified.bin"), f"{data_dir}/SaveGames/Active.sav"),
-            (self.resource_path(r"assets\user_custom.ini"), f"{data_dir}/Config/Android/UserCustom.ini")
+            (self.writable_path("active_modified.bin"), f"{data_dir}/SaveGames/Active.sav"),
+            (self.writable_path("user_custom.ini"), f"{data_dir}/Config/Android/UserCustom.ini")
         ]
 
         for src, dest in files:
-            self.adb.sync.push(src, dest)
-            sleep(0.2)
+            if os.path.exists(src):
+                self.adb.sync.push(src, dest)
+                sleep(0.2)
 
     def start_app(self):
         package = f"{self.pubg_package}/com.epicgames.ue4.SplashActivity"
@@ -1587,7 +1613,9 @@ DefaultFeature.MotionBlur=False
         safe_path = "/sdcard/ex_safe_folder"
         data_path_for_account = f"/data/data/{self.pubg_package}"
 
-        self.adb.push(self.resource_path('assets/ex_kr.ini'), user_custom_ini_path)
+        local_kr_ini = self.resource_path('assets/ex_kr.ini')
+        if os.path.exists(local_kr_ini):
+            self.adb.push(local_kr_ini, user_custom_ini_path)
 
         self.adb.shell(f"mkdir -p {safe_path}")
         self.adb.shell(f"cp -r {data_path_for_account}/shared_prefs {safe_path}/shared_prefs")

@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QIcon, QPixmap
+from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtWidgets import (
     QComboBox,
     QFrame,
@@ -11,7 +11,6 @@ from PyQt5.QtWidgets import (
     QMainWindow,
     QPushButton,
     QSizePolicy,
-    QSpacerItem,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -86,34 +85,6 @@ QPushButton:pressed {
     background-color: #c73652;
 }
 
-#beastBtn {
-    background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #FF0000, stop:1 #FF6600);
-    color: white;
-    font-weight: bold;
-    font-size: 13px;
-    border: none;
-    border-radius: 6px;
-    min-height: 40px;
-}
-#competitiveBtn {
-    background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #00CCFF, stop:1 #0066FF);
-    color: white;
-    font-weight: bold;
-    font-size: 13px;
-    border: none;
-    border-radius: 6px;
-    min-height: 40px;
-}
-#streamerBtn {
-    background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #9933FF, stop:1 #CC33FF);
-    color: white;
-    font-weight: bold;
-    font-size: 13px;
-    border: none;
-    border-radius: 6px;
-    min-height: 40px;
-}
-
 #connectBtn {
     background-color: #1a4a1a;
     border: 1px solid #2a7a2a;
@@ -152,23 +123,54 @@ QPushButton:pressed {
 
 QComboBox {
     background-color: #1e1e35;
-    color: #cccccc;
+    color: #ffffff;
     border: 1px solid #333355;
-    border-radius: 4px;
-    padding: 6px 10px;
-    min-height: 30px;
+    border-radius: 6px;
+    padding: 6px 35px 6px 12px;
+    font-size: 12px;
+    min-height: 32px;
+    min-width: 120px;
+}
+QComboBox:hover {
+    border-color: #e94560;
+}
+QComboBox:focus {
+    border-color: #e94560;
+    outline: none;
 }
 QComboBox::drop-down {
-    border: none;
-    background: #e94560;
-    width: 25px;
-    border-radius: 0 4px 4px 0;
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 30px;
+    border-left: 1px solid #333355;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    background-color: #e94560;
+}
+QComboBox::down-arrow {
+    image: none;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid white;
+    width: 0;
+    height: 0;
 }
 QComboBox QAbstractItemView {
     background-color: #1a1a2e;
-    border: 1px solid #333355;
-    color: #cccccc;
+    color: #ffffff;
+    border: 1px solid #e94560;
+    border-radius: 4px;
     selection-background-color: #e94560;
+    selection-color: #ffffff;
+    padding: 4px;
+    outline: none;
+}
+QComboBox QAbstractItemView::item {
+    min-height: 28px;
+    padding: 4px 8px;
+}
+QComboBox QAbstractItemView::item:hover {
+    background-color: #2a2a4a;
 }
 
 #statusBar {
@@ -191,8 +193,7 @@ QPushButton[role="style"] {
     border: 2px solid #333355;
     border-radius: 6px;
     padding: 4px;
-    min-width: 100px;
-    min-height: 90px;
+    min-height: 72px;
 }
 QPushButton[role="style"]:checked {
     border: 2px solid #e94560;
@@ -206,6 +207,30 @@ QLabel#connection_banner_label {
     padding: 8px;
     font-weight: bold;
 }
+
+QFrame#aboutHeaderCard {
+    background-color: #1a1a2e;
+    border: 1px solid #e94560;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+QFrame#aboutFeaturesCard {
+    background-color: #14142a;
+    border: 1px solid #222244;
+    border-radius: 10px;
+}
+
+QLabel#aboutFeatureName, QLabel#aboutFeatureDesc {
+    color: #cccccc;
+    font-size: 12px;
+    padding: 8px 4px;
+    border-bottom: 1px solid #1e1e35;
+}
+
+QLabel#aboutFeatureName {
+    font-weight: bold;
+}
 """
 
 
@@ -213,8 +238,8 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow: QMainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName("MainWindow")
-        MainWindow.setMinimumSize(1280, 800)
-        MainWindow.resize(1280, 800)
+        MainWindow.setMinimumSize(760, 500)
+        MainWindow.resize(1100, 700)
         MainWindow.setStyleSheet(THEME)
 
         font = QFont("Segoe UI", 10)
@@ -282,14 +307,14 @@ class Ui_MainWindow(object):
         self.zoom125_btn = QPushButton("125%", self.titleBar)
         self.zoom125_btn.setObjectName("zoom125_btn")
         for b in [self.zoom75_btn, self.zoom100_btn, self.zoom125_btn]:
-            b.setMinimumWidth(58)
+            b.setMinimumWidth(46)
 
         self.minimize_btn = QPushButton("-", self.titleBar)
         self.minimize_btn.setObjectName("minimize_btn")
-        self.minimize_btn.setMinimumWidth(36)
+        self.minimize_btn.setMinimumWidth(30)
         self.close_btn = QPushButton("X", self.titleBar)
         self.close_btn.setObjectName("close_btn")
-        self.close_btn.setMinimumWidth(36)
+        self.close_btn.setMinimumWidth(30)
 
         self.titleBarLayout.addWidget(self.appname_label, 1)
         self.titleBarLayout.addWidget(nav_host, 0)
@@ -319,7 +344,7 @@ class Ui_MainWindow(object):
     def _section_frame(self, parent):
         frame = QFrame(parent)
         frame.setObjectName("sectionBox")
-        frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         return frame
 
     def _section_label(self, text, parent):
@@ -331,8 +356,8 @@ class Ui_MainWindow(object):
         self.gfx_page = QWidget()
         self.gfx_page.setObjectName("gfx_page")
         page_layout = QVBoxLayout(self.gfx_page)
-        page_layout.setContentsMargins(14, 12, 14, 12)
-        page_layout.setSpacing(10)
+        page_layout.setContentsMargins(16, 16, 16, 16)
+        page_layout.setSpacing(14)
 
         self.connection_banner_label = QLabel(self.gfx_page)
         self.connection_banner_label.setObjectName("connection_banner_label")
@@ -340,22 +365,24 @@ class Ui_MainWindow(object):
 
         self.frame = QWidget(self.gfx_page)
         self.frame.setObjectName("frame")
+        self.frame.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.frame_layout = QVBoxLayout(self.frame)
         self.frame_layout.setContentsMargins(0, 0, 0, 0)
-        self.frame_layout.setSpacing(10)
+        self.frame_layout.setSpacing(12)
 
         self.GraphicsFrame = self._section_frame(self.frame)
         g_layout = QVBoxLayout(self.GraphicsFrame)
         g_layout.setContentsMargins(12, 10, 12, 10)
-        g_layout.setSpacing(8)
+        g_layout.setSpacing(10)
         self.graphics_label = self._section_label("Graphics Quality", self.GraphicsFrame)
         g_layout.addWidget(self.graphics_label)
 
         self.layoutWidget = QWidget(self.GraphicsFrame)
         self.layoutWidget.setObjectName("layoutWidget")
+        self.layoutWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.GraphicsLayout = QHBoxLayout(self.layoutWidget)
         self.GraphicsLayout.setContentsMargins(0, 0, 0, 0)
-        self.GraphicsLayout.setSpacing(8)
+        self.GraphicsLayout.setSpacing(10)
         self.smooth_graphics_btn = QPushButton("Super Smooth", self.layoutWidget)
         self.smooth_graphics_btn.setObjectName("smooth_graphics_btn")
         self.smooth_graphics_btn.setCheckable(True)
@@ -390,15 +417,24 @@ class Ui_MainWindow(object):
         self.FramerateFrame = self._section_frame(self.frame)
         fps_layout = QVBoxLayout(self.FramerateFrame)
         fps_layout.setContentsMargins(12, 10, 12, 10)
-        fps_layout.setSpacing(8)
+        fps_layout.setSpacing(10)
         self.fps_label = self._section_label("Frame Rate", self.FramerateFrame)
         fps_layout.addWidget(self.fps_label)
 
         self.layoutWidget1 = QWidget(self.FramerateFrame)
         self.layoutWidget1.setObjectName("layoutWidget1")
-        self.FramerateLayout = QHBoxLayout(self.layoutWidget1)
+        self.layoutWidget1.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.FramerateLayout = QVBoxLayout(self.layoutWidget1)
         self.FramerateLayout.setContentsMargins(0, 0, 0, 0)
         self.FramerateLayout.setSpacing(8)
+
+        self.FramerateRowTop = QHBoxLayout()
+        self.FramerateRowTop.setContentsMargins(0, 0, 0, 0)
+        self.FramerateRowTop.setSpacing(8)
+        self.FramerateRowBottom = QHBoxLayout()
+        self.FramerateRowBottom.setContentsMargins(0, 0, 0, 0)
+        self.FramerateRowBottom.setSpacing(8)
+
         self.low_fps_btn = QPushButton("Low", self.layoutWidget1)
         self.low_fps_btn.setObjectName("low_fps_btn")
         self.low_fps_btn.setCheckable(True)
@@ -420,6 +456,7 @@ class Ui_MainWindow(object):
         self.fps120_fps_btn = QPushButton("Ultra Extreme", self.layoutWidget1)
         self.fps120_fps_btn.setObjectName("fps120_fps_btn")
         self.fps120_fps_btn.setCheckable(True)
+        self.fps120_fps_btn.setMinimumWidth(140)
 
         for btn in [
             self.low_fps_btn,
@@ -428,23 +465,28 @@ class Ui_MainWindow(object):
             self.ultra_fps_btn,
             self.extreme_fps_btn,
             self.fps90_fps_btn,
-            self.fps120_fps_btn,
         ]:
-            btn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
-            self.FramerateLayout.addWidget(btn)
-        self.FramerateLayout.addStretch(1)
+            btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            self.FramerateRowTop.addWidget(btn)
+
+        self.fps120_fps_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.FramerateRowBottom.addWidget(self.fps120_fps_btn)
+
+        self.FramerateLayout.addLayout(self.FramerateRowTop)
+        self.FramerateLayout.addLayout(self.FramerateRowBottom)
         fps_layout.addWidget(self.layoutWidget1)
         self.frame_layout.addWidget(self.FramerateFrame)
 
         self.StyleFrame = self._section_frame(self.frame)
         style_layout = QVBoxLayout(self.StyleFrame)
         style_layout.setContentsMargins(12, 10, 12, 10)
-        style_layout.setSpacing(8)
+        style_layout.setSpacing(10)
         self.style_label = self._section_label("Style", self.StyleFrame)
         style_layout.addWidget(self.style_label)
 
         self.layoutWidget2 = QWidget(self.StyleFrame)
         self.layoutWidget2.setObjectName("layoutWidget2")
+        self.layoutWidget2.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.StyleLayout = QHBoxLayout(self.layoutWidget2)
         self.StyleLayout.setContentsMargins(0, 0, 0, 0)
         self.StyleLayout.setSpacing(10)
@@ -493,12 +535,12 @@ class Ui_MainWindow(object):
         self.frame_layout.addWidget(self.StyleFrame)
 
         shadow_row = QHBoxLayout()
-        shadow_row.setSpacing(10)
+        shadow_row.setSpacing(12)
 
         self.ShadowFrame = self._section_frame(self.frame)
         shadow_layout = QVBoxLayout(self.ShadowFrame)
         shadow_layout.setContentsMargins(12, 10, 12, 10)
-        shadow_layout.setSpacing(8)
+        shadow_layout.setSpacing(10)
         self.shadow_label = self._section_label("Shadow", self.ShadowFrame)
         shadow_layout.addWidget(self.shadow_label)
         self.layoutWidget_2 = QWidget(self.ShadowFrame)
@@ -519,7 +561,7 @@ class Ui_MainWindow(object):
         self.ResolutionkrFrame = self._section_frame(self.frame)
         res_layout = QVBoxLayout(self.ResolutionkrFrame)
         res_layout.setContentsMargins(12, 10, 12, 10)
-        res_layout.setSpacing(8)
+        res_layout.setSpacing(10)
         self.resolution_label = self._section_label("Resolution PUBG KR", self.ResolutionkrFrame)
         self.resolution_btn = QPushButton("1080p", self.ResolutionkrFrame)
         self.resolution_btn.setObjectName("resolution_btn")
@@ -534,7 +576,7 @@ class Ui_MainWindow(object):
         page_layout.addWidget(self.frame, 1)
 
         footer_layout = QHBoxLayout()
-        footer_layout.setSpacing(10)
+        footer_layout.setSpacing(12)
 
         self.PubgchooseFrame = self._section_frame(self.gfx_page)
         pubg_choose_layout = QVBoxLayout(self.PubgchooseFrame)
@@ -561,14 +603,16 @@ class Ui_MainWindow(object):
         self.connect_gameloop_btn.setProperty("id", "connectBtn")
         self.connect_gameloop_btn.setObjectName("connectBtn")
         self.connect_gameloop_btn.setCheckable(True)
-        self.connect_gameloop_btn.setMinimumWidth(230)
+        self.connect_gameloop_btn.setMinimumWidth(150)
+        self.connect_gameloop_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         self.submit_gfx_btn = QPushButton("Submit Changes", self.gfx_page)
         self.submit_gfx_btn.setObjectName("submitBtn")
-        self.submit_gfx_btn.setMinimumWidth(200)
+        self.submit_gfx_btn.setMinimumWidth(140)
+        self.submit_gfx_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
-        footer_layout.addWidget(self.connect_gameloop_btn)
-        footer_layout.addWidget(self.submit_gfx_btn)
+        footer_layout.addWidget(self.connect_gameloop_btn, 1)
+        footer_layout.addWidget(self.submit_gfx_btn, 1)
 
         page_layout.addLayout(footer_layout)
 
@@ -751,54 +795,91 @@ class Ui_MainWindow(object):
         self.about_page = QWidget()
         self.about_page.setObjectName("about_page")
         layout = QVBoxLayout(self.about_page)
-        layout.setContentsMargins(40, 30, 40, 30)
-        layout.setSpacing(16)
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(14)
 
-        layout.addStretch(1)
+        header_card = QFrame(self.about_page)
+        header_card.setObjectName("aboutHeaderCard")
+        header_card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+        header_layout = QVBoxLayout(header_card)
+        header_layout.setContentsMargins(20, 18, 20, 18)
+        header_layout.setSpacing(4)
 
-        card = self._section_frame(self.about_page)
-        card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(16, 14, 16, 14)
-        card_layout.setSpacing(8)
+        self.about_title_label = QLabel("EX Tool v0.2", header_card)
+        self.about_title_label.setAlignment(Qt.AlignCenter)
+        title_font = QFont("Segoe UI", 16)
+        title_font.setBold(True)
+        self.about_title_label.setFont(title_font)
 
-        self.about_label_text = QLabel(card)
-        self.about_label_text.setObjectName("about_label_text")
-        self.about_label_text.setAlignment(Qt.AlignCenter)
-        self.about_label_text.setWordWrap(True)
-        card_layout.addWidget(self.about_label_text)
+        self.about_subtitle_label = QLabel("PUBG Mobile GameLoop Optimizer", header_card)
+        self.about_subtitle_label.setAlignment(Qt.AlignCenter)
 
-        features = QLabel(card)
-        features.setWordWrap(True)
-        features.setText(
-            "? Unlock locked graphics (Extreme HDR, Ultra HD)\n"
-            "? Engine.ini optimization for headshot clarity\n"
-            "? GameLoop full resource allocation\n"
-            "? Windows latency tweaks + service optimization\n"
-            "? FPS stabilizer (never drops)\n"
-            "? DNS optimization for lower ping\n"
-            "? iPad view layout\n"
-            "? Desktop shortcut creator"
-        )
-        features.setObjectName("sectionBox")
-        features.setStyleSheet("padding: 12px;")
-        card_layout.addWidget(features)
+        self.about_link_label = QLabel("github.com/saadaliadalat", header_card)
+        self.about_link_label.setAlignment(Qt.AlignCenter)
+        self.about_link_label.setStyleSheet("color: #e94560;")
+
+        header_layout.addWidget(self.about_title_label)
+        header_layout.addWidget(self.about_subtitle_label)
+        header_layout.addWidget(self.about_link_label)
+        layout.addWidget(header_card)
+
+        features_card = QFrame(self.about_page)
+        features_card.setObjectName("aboutFeaturesCard")
+        features_card.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        features_layout = QVBoxLayout(features_card)
+        features_layout.setContentsMargins(16, 14, 16, 14)
+        features_layout.setSpacing(8)
+
+        section_title = self._section_label("What This Tool Does", features_card)
+        features_layout.addWidget(section_title)
+
+        feature_grid = QGridLayout()
+        feature_grid.setContentsMargins(0, 0, 0, 0)
+        feature_grid.setHorizontalSpacing(14)
+        feature_grid.setVerticalSpacing(2)
+
+        feature_rows = [
+            ("GFX Unlocker", "Unlock Extreme HDR, Ultra HD, and locked graphics settings."),
+            ("PC Optimizer", "Allocate more RAM/CPU to GameLoop and apply priority tweaks."),
+            ("Headshot Tools", "Engine.ini optimization for sharper textures and visibility."),
+            ("Network", "DNS changer and ping optimization for stable networking."),
+            ("Resolution", "iPad view and custom resolution options for wider FOV."),
+            ("FPS Tweaks", "Service and timer optimizations for smoother frame pacing."),
+        ]
+
+        for row, (name, description) in enumerate(feature_rows):
+            name_label = QLabel(name, features_card)
+            name_label.setObjectName("aboutFeatureName")
+            desc_label = QLabel(description, features_card)
+            desc_label.setObjectName("aboutFeatureDesc")
+            desc_label.setWordWrap(True)
+            feature_grid.addWidget(name_label, row, 0)
+            feature_grid.addWidget(desc_label, row, 1)
+
+        feature_grid.setColumnStretch(0, 1)
+        feature_grid.setColumnStretch(1, 3)
+        features_layout.addLayout(feature_grid)
+        layout.addWidget(features_card, 1)
 
         links_row = QHBoxLayout()
+        links_row.setSpacing(10)
         links_row.addStretch(1)
-        self.github_btn = QPushButton("GitHub", card)
+        self.github_btn = QPushButton("GitHub", self.about_page)
         self.github_btn.setObjectName("github_btn")
-        self.report_bug_btn = QPushButton("Report Bug", card)
+        self.report_bug_btn = QPushButton("Report Bug", self.about_page)
         self.report_bug_btn.setObjectName("report_bug_btn")
-        self.discord_btn = QPushButton("Discord", card)
+        self.discord_btn = QPushButton("Discord", self.about_page)
         self.discord_btn.setObjectName("discord_btn")
         links_row.addWidget(self.github_btn)
         links_row.addWidget(self.report_bug_btn)
         links_row.addWidget(self.discord_btn)
         links_row.addStretch(1)
-        card_layout.addLayout(links_row)
+        layout.addLayout(links_row)
 
-        layout.addWidget(card)
-        layout.addStretch(1)
+        self.about_footer_label = QLabel("v0.2  -  All settings are reversible  -  No bans", self.about_page)
+        self.about_footer_label.setAlignment(Qt.AlignCenter)
+        self.about_footer_label.setStyleSheet("color: #aaaaaa;")
+        layout.addWidget(self.about_footer_label)
 
         self.label_8 = QLabel(self.about_page)
         self.label_8.hide()

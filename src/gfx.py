@@ -128,7 +128,6 @@ class GFX(QObject):
         self.fps_buttons_func()
         self.style_buttons_func()
         self.shadow_buttons_func()
-        self.create_pc_preset_buttons()  # Add PC preset buttons
 
         self.gfx_buttons(enabled=False)
         self.app.set_adb_buttons_state(False)
@@ -290,6 +289,7 @@ class GFX(QObject):
             button.setMinimumWidth(button.fontMetrics().horizontalAdvance(button.text()) + 30)
             button.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
             button.clicked.connect(lambda checked, btn=button: self.check_button_selected(buttons, btn))
+        self.ui.fps120_fps_btn.setMinimumWidth(max(self.ui.fps120_fps_btn.minimumWidth(), 140))
 
     def style_buttons_func(self):
         buttons = [
@@ -344,82 +344,3 @@ class GFX(QObject):
             button.setEnabled(enabled)
             if not enabled:
                 button.setChecked(enabled)
-
-    def create_pc_preset_buttons(self):
-        """Create PC preset buttons in a responsive layout."""
-        from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QSizePolicy, QVBoxLayout, QWidget
-
-        frame_layout = self.ui.GraphicsFrame.layout()
-        if frame_layout is None:
-            frame_layout = QVBoxLayout(self.ui.GraphicsFrame)
-            frame_layout.setContentsMargins(10, 8, 10, 8)
-            frame_layout.setSpacing(6)
-            frame_layout.addWidget(self.ui.graphics_label)
-            frame_layout.addWidget(self.ui.layoutWidget)
-
-        self.pc_preset_container = QWidget(self.ui.GraphicsFrame)
-        self.pc_preset_layout = QHBoxLayout(self.pc_preset_container)
-        self.pc_preset_layout.setContentsMargins(0, 0, 0, 0)
-        self.pc_preset_layout.setSpacing(8)
-
-        self.beast_mode_btn = QPushButton("BEAST MODE", self.pc_preset_container)
-        self.beast_mode_btn.setObjectName("beastBtn")
-        self.beast_mode_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.beast_mode_btn.setMinimumHeight(34)
-        self.beast_mode_btn.clicked.connect(self.apply_beast_mode_preset)
-        self.beast_mode_btn.setToolTip("Extreme HDR + Ultra Extreme FPS + 4K + PC Ultra Graphics")
-
-        self.competitive_mode_btn = QPushButton("COMPETITIVE", self.pc_preset_container)
-        self.competitive_mode_btn.setObjectName("competitiveBtn")
-        self.competitive_mode_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.competitive_mode_btn.setMinimumHeight(34)
-        self.competitive_mode_btn.clicked.connect(self.apply_competitive_mode_preset)
-        self.competitive_mode_btn.setToolTip("Max Visibility + Ultra Extreme FPS + Grass Reduction")
-
-        self.streamer_mode_btn = QPushButton("STREAMER", self.pc_preset_container)
-        self.streamer_mode_btn.setObjectName("streamerBtn")
-        self.streamer_mode_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        self.streamer_mode_btn.setMinimumHeight(34)
-        self.streamer_mode_btn.clicked.connect(self.apply_streamer_mode_preset)
-        self.streamer_mode_btn.setToolTip("HDR + Stable 60 FPS + 1080p for Streaming")
-        self.pc_preset_layout.addWidget(self.beast_mode_btn)
-        self.pc_preset_layout.addWidget(self.competitive_mode_btn)
-        self.pc_preset_layout.addWidget(self.streamer_mode_btn)
-
-        frame_layout.insertWidget(1, self.pc_preset_container)
-
-    def apply_beast_mode_preset(self):
-        """Apply BEAST MODE preset"""
-        if not self.app.is_adb_working:
-            self.app.show_status_message("Connect to GameLoop first.", 4, "warning")
-            return
-        self.app.show_status_message("Applying BEAST MODE... (This may take a moment)")
-        self.app.apply_beast_mode()
-        self.app.save_graphics_file()
-        self.app.push_active_shadow_file()
-        self.app.start_app()
-        self.app.show_status_message("BEAST MODE activated.", 5, "success")
-
-    def apply_competitive_mode_preset(self):
-        """Apply COMPETITIVE MODE preset"""
-        if not self.app.is_adb_working:
-            self.app.show_status_message("Connect to GameLoop first.", 4, "warning")
-            return
-        self.app.show_status_message("Applying COMPETITIVE MODE...")
-        self.app.apply_competitive_mode()
-        self.app.save_graphics_file()
-        self.app.push_active_shadow_file()
-        self.app.start_app()
-        self.app.show_status_message("COMPETITIVE MODE activated.", 5, "success")
-
-    def apply_streamer_mode_preset(self):
-        """Apply STREAMER MODE preset"""
-        if not self.app.is_adb_working:
-            self.app.show_status_message("Connect to GameLoop first.", 4, "warning")
-            return
-        self.app.show_status_message("Applying STREAMER MODE...")
-        self.app.apply_streamer_mode()
-        self.app.save_graphics_file()
-        self.app.push_active_shadow_file()
-        self.app.start_app()
-        self.app.show_status_message("STREAMER MODE activated.", 5, "success")
