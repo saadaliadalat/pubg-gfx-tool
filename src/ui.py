@@ -173,6 +173,22 @@ QComboBox QAbstractItemView::item:hover {
     background-color: #2a2a4a;
 }
 
+QLineEdit {
+    background-color: #1e1e35;
+    color: #ffffff;
+    border: 1px solid #333355;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    min-height: 32px;
+}
+QLineEdit:hover {
+    border-color: #e94560;
+}
+QLineEdit:focus {
+    border-color: #e94560;
+}
+
 #statusBar {
     background-color: #1a1a2e;
     border-top: 1px solid #333355;
@@ -646,11 +662,20 @@ class Ui_MainWindow(object):
         self.glpriority_dropdown = QComboBox(left_box)
         self.glpriority_dropdown.setObjectName("glpriority_dropdown")
         self.glpriority_dropdown.addItems(["High", "Realtime"])
+        self.glcores_input = QLineEdit(left_box)
+        self.glcores_input.setObjectName("glcores_input")
+        self.glcores_input.setPlaceholderText("CPU Cores (Auto)")
+        self.glcores_input.setClearButtonEnabled(True)
         self.glpriority_other_btn = QPushButton("Priority Boost", left_box)
         self.glpriority_other_btn.setObjectName("glpriority_other_btn")
         priority_row.addWidget(self.glpriority_other_btn, 2)
+        priority_row.addWidget(self.glcores_input, 1)
         priority_row.addWidget(self.glpriority_dropdown, 1)
         left_layout.addLayout(priority_row)
+        self.glcores_hint_label = QLabel("Leave empty for auto. Example: 10", left_box)
+        self.glcores_hint_label.setObjectName("glcores_hint_label")
+        self.glcores_hint_label.setStyleSheet("color: #8888aa; font-size: 11px;")
+        left_layout.addWidget(self.glcores_hint_label)
 
         self.gllatency_other_btn = QPushButton("Latency Tweaks", left_box)
         self.gllatency_other_btn.setObjectName("gllatency_other_btn")

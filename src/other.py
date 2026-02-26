@@ -67,6 +67,10 @@ class Other(QObject):
         ui.ipad_other_btn.clicked.connect(self.ipad_submit_button_click)
         ui.ipad_rest_btn.clicked.connect(self.ipad_reset_button_click)
 
+        saved_cores = str(self.app.settings.value("GLCustomCpuCores", "") or "").strip()
+        if saved_cores:
+            ui.glcores_input.setText(saved_cores)
+
         ui.ipad_code.hide()
         ui.ipad_code_label.hide()
 
@@ -88,6 +92,24 @@ class Other(QObject):
             self.app.show_status_message("Select PUBG version first.", 4, "warning")
             return False
         return True
+
+    def _parse_custom_cores(self):
+        raw_value = self.ui.glcores_input.text().strip()
+        if not raw_value:
+            self.app.settings.setValue("GLCustomCpuCores", "")
+            return None
+        if not raw_value.isdigit():
+            self.app.show_status_message("CPU cores must be a positive whole number.", 5, "warning")
+            return "invalid"
+        cores = int(raw_value)
+        if cores < 1:
+            self.app.show_status_message("CPU cores must be at least 1.", 5, "warning")
+            return "invalid"
+        if cores > 0xFFFFFFFF:
+            self.app.show_status_message("CPU cores value is too large.", 5, "warning")
+            return "invalid"
+        self.app.settings.setValue("GLCustomCpuCores", str(cores))
+        return cores
 
     @staticmethod
     def _detect_gpu_provider():
@@ -119,10 +141,13 @@ class Other(QObject):
     def gameloop_optimizer_button_click(self, e):
         """ Full Resource Boost Button On Click Function """
         try:
+            target_cores = self._parse_custom_cores()
+            if target_cores == "invalid":
+                return
             self.app.add_to_windows_defender_exclusion()
             self.app.optimize_gameloop_registry()
             self._apply_gpu_optimization()
-            ram_mb, cpu_cores, boosted = self.app.apply_full_resource_boost()
+            ram_mb, cpu_cores, boosted = self.app.apply_full_resource_boost(target_cores=target_cores)
             self.app.show_status_message(
                 f"GameLoop fully optimized: {ram_mb // 1024}GB RAM, {cpu_cores} cores, {boosted} processes.",
                 6,
@@ -134,9 +159,15 @@ class Other(QObject):
     def gameloop_priority_button_click(self, e):
         """ Gameloop Priority Boost Button On Click Function """
         try:
+            target_cores = self._parse_custom_cores()
+            if target_cores == "invalid":
+                return
             priority_value = self.ui.glpriority_dropdown.currentText().lower()
-            ram_mb, cpu_cores = self.app.force_gameloop_resource_allocation()
-            boosted, applied_requested = self.app.boost_gameloop_priority(priority=priority_value)
+            ram_mb, cpu_cores = self.app.force_gameloop_resource_allocation(target_cores=target_cores)
+            boosted, applied_requested = self.app.boost_gameloop_priority(
+                priority=priority_value,
+                target_cores=target_cores,
+            )
             if boosted:
                 message = (
                     f"Gameloop boosted ({priority_value}): {cpu_cores} CPU cores, {ram_mb}MB RAM, "
@@ -215,11 +246,14 @@ class Other(QObject):
     def all_recommended_button_click(self, e):
         """ All Recommended Button On Click Function """
         try:
+            target_cores = self._parse_custom_cores()
+            if target_cores == "invalid":
+                return
             self.app.temp_cleaner()
             self.app.add_to_windows_defender_exclusion()
             self.app.optimize_gameloop_registry()
             self._apply_gpu_optimization()
-            self.app.apply_full_resource_boost()
+            self.app.apply_full_resource_boost(target_cores=target_cores)
             self.app.apply_latency_tweaks()
             self.app.apply_fps_stabilizer()
             if self.app.is_adb_working:

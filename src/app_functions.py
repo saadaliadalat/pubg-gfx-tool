@@ -340,7 +340,7 @@ class Optimizer(Registry):
 
         total_cores = psutil.cpu_count(logical=True) or 1
         if target_cores is not None:
-            cpu_value = max(1, min(int(target_cores), total_cores))
+            cpu_value = max(1, min(int(target_cores), 0xFFFFFFFF))
         elif aggressive:
             cpu_value = max(1, min(total_cores, 12))
         else:
@@ -400,7 +400,7 @@ class Optimizer(Registry):
 
         return boosted, applied_requested
 
-    def apply_full_resource_boost(self):
+    def apply_full_resource_boost(self, target_cores: int | None = None):
         """
         Gives Gameloop everything: max RAM, max CPU cores, real-time priority,
         and forces GPU preference via registry.
@@ -413,7 +413,12 @@ class Optimizer(Registry):
         self.set_dword("VMMemorySizeInMB", gameloop_ram)
 
         total_cores = psutil.cpu_count(logical=True) or 4
-        gameloop_cores = min(total_cores, 12)
+        if target_cores is None:
+            gameloop_cores = max(1, int(total_cores))
+            affinity_target_cores = total_cores
+        else:
+            gameloop_cores = max(1, min(int(target_cores), 0xFFFFFFFF))
+            affinity_target_cores = target_cores
         self.set_dword("VMCpuCount", gameloop_cores)
 
         self.set_dword("RenderOptimizeEnabled", 0)
@@ -421,7 +426,7 @@ class Optimizer(Registry):
         self.set_dword("SetGraphicsCard", 1)
         self.set_dword("ForceDirectX", 1)
 
-        boosted, _ = self.boost_gameloop_priority(priority="realtime", target_cores=total_cores)
+        boosted, _ = self.boost_gameloop_priority(priority="realtime", target_cores=affinity_target_cores)
 
         subprocess.run(
             ["powercfg", "/setactive", "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"],
