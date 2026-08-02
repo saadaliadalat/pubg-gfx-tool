@@ -8,3 +8,4 @@ pywin32
 WMI
 winshell
 xmltodict
+setuptools<70
