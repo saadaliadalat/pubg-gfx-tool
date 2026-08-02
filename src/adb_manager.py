@@ -26,7 +26,7 @@ class AdbManager:
         target_names = {p.lower() for p in GAMELOOP_PROCESSES}
         for proc in psutil.process_iter(['name']):
             try:
-                pname = (proc.info().get('name') or '').lower()
+                pname = (proc.info.get('name') or '').lower()
                 if pname in target_names or 'aow_exe' in pname or 'androidemulator' in pname:
                     return True
             except (psutil.NoSuchProcess, psutil.AccessDenied):
@@ -55,7 +55,7 @@ class AdbManager:
         try:
             target_proc_names = {'androidemulatorex.exe', 'androidemulatoren.exe', 'androidemulator.exe', 'aow_exe.exe', 'aow.exe'}
             for proc in psutil.process_iter(['name']):
-                pname = (proc.info().get('name') or '').lower()
+                pname = (proc.info.get('name') or '').lower()
                 if pname in target_proc_names:
                     try:
                         for conn in proc.net_connections(kind='inet'):

@@ -107,7 +107,7 @@ class MainWindow(QMainWindow):
         self.btn_min.clicked.connect(self.showMinimized)
 
         self.btn_close = QPushButton("✕")
-        self.btn_close.setProperty("role", "titleControlClose")
+        self.btn_close.setProperty("role", "closeBtn")
         self.btn_close.clicked.connect(self.close)
 
         tb_layout.addLayout(brand_layout)
@@ -134,9 +134,9 @@ class MainWindow(QMainWindow):
 
     def _build_status_bar(self):
         self.status_frame = QFrame()
-        self.status_frame.setObjectName("statusBarFrame")
+        self.status_frame.setObjectName("statusBar")
         sb_layout = QHBoxLayout(self.status_frame)
-        sb_layout.setContentsMargins(14, 6, 14, 6)
+        sb_layout.setContentsMargins(14, 4, 14, 4)
 
         self.lbl_status = QLabel("Ready")
         self.lbl_status.setObjectName("statusLabel")
