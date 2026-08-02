@@ -69,18 +69,18 @@ class ConnectWorkerThread(QThread):
         self.app.check_adb_status()
 
         if not self.app.adb_enabled:
-            message = "Restart GameLoop and Try Again." if self.app.is_gameloop_running() else "GameLoop not working."
+            message = "ADB enabled in registry. Restart GameLoop and Try Again." if self.app.is_gameloop_running() else "GameLoop is not running."
             self.show_connection_error(message)
             return
 
         if not self.app.is_gameloop_running():
-            self.show_connection_error("GameLoop not working.")
+            self.show_connection_error("GameLoop is not running. Please start GameLoop first.")
             return
 
         self.app.check_adb_connection()
 
         if not self.app.is_adb_working:
-            message = "Restart GameLoop and Try Again." if self.app.is_gameloop_running() else "Gameloop not working."
+            message = "Could not connect to GameLoop. Make sure GameLoop is open." if self.app.is_gameloop_running() else "GameLoop is not running."
             self.show_connection_error(message)
             return
 

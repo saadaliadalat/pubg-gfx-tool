@@ -968,52 +968,144 @@ class Game(Optimizer):
         shortcut.save()
 
     def check_adb_status(self):
-        adb_status = self.get_reg("AdbDisable")
+        try:
+            adb_status = self.get_reg("AdbDisable")
 
-        if adb_status == 0:
+            if adb_status == 0:
+                self.adb_enabled = True
+                return
+            elif adb_status == 1:
+                self.set_dword("AdbDisable", 0)
+                self.adb_enabled = False
+                return
+            else:
+                self.set_dword("AdbDisable", 0)
+                self.adb_enabled = True
+                return
+        except Exception as e:
+            self.logger.error(f"Error checking adb status: {e}")
             self.adb_enabled = True
-            return
-        elif adb_status == 1:
-            self.set_dword("AdbDisable", 0)
-            self.adb_enabled = False
-            return
-        elif adb_status is None:
-            raise ValueError("Could not get AdbDisable status from registry.")
-
-        raise ValueError("Unknown AdbDisable status.")
 
     @staticmethod
     def is_gameloop_running():
-        running_process_list = subprocess.check_output(["tasklist"])
-        emulator_processes = [b"AndroidEmulatorEx.exe", b"AndroidEmulatorEn.exe", b"AndroidEmulator.exe"]
-        return any(process in running_process_list for process in emulator_processes)
+        try:
+            target_names = {
+                "androidemulatorex.exe", "androidemulatoren.exe", "androidemulator.exe",
+                "aow_exe.exe", "aow.exe", "appmarket.exe", "tsettingcenter.exe", "txbench.exe"
+            }
+            for proc in psutil.process_iter(['name']):
+                name = proc.info.get('name')
+                if name and name.lower() in target_names:
+                    return True
+        except Exception:
+            pass
+        return False
 
     def check_adb_connection(self, first_check=True):
         try:
-            client = adbutils.AdbClient()
-            self.adb = client.device(serial="emulator-5554")
+            client = adbutils.AdbClient(host="127.0.0.1", port=5037)
 
-            while not self.adb.shell("getprop dev.bootcomplete"):
+            ports = [5555, 5554, 5565, 5575, 11223, 55555]
+
+            try:
+                for proc in psutil.process_iter(['name', 'pid']):
+                    pname = (proc.info.get('name') or '').lower()
+                    if pname in {'androidemulatorex.exe', 'androidemulatoren.exe', 'androidemulator.exe', 'aow_exe.exe', 'aow.exe'}:
+                        try:
+                            for conn in proc.net_connections(kind='inet'):
+                                if conn.status == psutil.CONN_LISTEN and conn.laddr and conn.laddr.port:
+                                    if conn.laddr.port not in ports:
+                                        ports.insert(0, conn.laddr.port)
+                        except Exception:
+                            pass
+            except Exception:
                 pass
 
-            self.adb.sync.pull("/default.prop", self.writable_path("device_probe.bin"))
+            connected_device = None
+
+            devices = client.device_list()
+            if devices:
+                connected_device = devices[0]
+
+            if not connected_device:
+                for port in ports:
+                    try:
+                        client.connect(f"127.0.0.1:{port}")
+                        devs = client.device_list()
+                        if devs:
+                            connected_device = devs[0]
+                            break
+                    except Exception:
+                        pass
+
+            if connected_device:
+                self.adb = connected_device
+            else:
+                self.adb = client.device(serial="emulator-5554")
+
+            boot_ok = False
+            for _ in range(10):
+                try:
+                    res = str(self.adb.shell("getprop dev.bootcomplete")).strip()
+                    if res in ("1", "0", ""):
+                        boot_ok = True
+                        break
+                except Exception:
+                    pass
+                sleep(0.5)
+
+            if not boot_ok:
+                try:
+                    self.adb.shell("echo 1")
+                except Exception as ex:
+                    raise ex
+
+            probe_success = False
+            for probe_path in ["/default.prop", "/system/build.prop"]:
+                try:
+                    self.adb.sync.pull(probe_path, self.writable_path("device_probe.bin"))
+                    probe_success = True
+                    break
+                except Exception:
+                    pass
+
+            if not probe_success:
+                out = self.adb.shell("getprop ro.product.model").strip()
+                if not out:
+                    self.adb.shell("ls /sdcard")
+
             self.is_adb_working = True
 
         except Exception as e:
+            self.logger.error(f"ADB connection attempt failed: {str(e)}", exc_info=True)
             self.kill_adb()
             self.is_adb_working = False
 
             if first_check:
+                sleep(1)
                 self.check_adb_connection(False)
 
     def pubg_version_found(self):
         """
         Checks if any version of PUBG is installed on the device.
         """
-        while not self.adb.shell("getprop dev.bootcomplete"):
+        try:
+            for _ in range(5):
+                res = str(self.adb.shell("getprop dev.bootcomplete")).strip()
+                if res:
+                    break
+                sleep(0.5)
+        except Exception:
             pass
-        self.PUBG_Found = [version_name for package_name, version_name in self.pubg_versions.items()
-                           if self.adb.shell(f"pm list packages {package_name}")]
+
+        self.PUBG_Found = []
+        for package_name, version_name in self.pubg_versions.items():
+            try:
+                out = self.adb.shell(f"pm list packages {package_name}")
+                if out and package_name in out:
+                    self.PUBG_Found.append(version_name)
+            except Exception:
+                pass
 
     def get_graphics_file(self, package: str):
         active_savegames_path = f"/sdcard/Android/data/{package}/files/UE4Game/ShadowTrackerExtra/ShadowTrackerExtra/Saved/SaveGames/Active.sav"
