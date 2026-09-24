@@ -247,8 +247,8 @@ class MainWindow(QMainWindow):
             return
 
         quality = self.gfx_page.q_group.checkedButton().text()
-        fps = self.gfx_page.fps_group.checkedButton().text().split(" (")[0]
-        style = self.gfx_page.style_group.checkedButton().text()
+        fps = self.gfx_page.fps_group.checkedButton().text().split(" (")[0].strip()
+        style = self.gfx_page.style_group.checkedButton().text().split("\n")[-1].strip()
         disable_shadow = self.gfx_page.btn_shadow_off.isChecked()
 
         self.gfx_page.btn_apply.setEnabled(False)

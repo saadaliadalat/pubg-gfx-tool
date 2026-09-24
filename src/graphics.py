@@ -88,7 +88,8 @@ class GraphicsManager:
         }
         val_byte = fps_mapping.get(val)
         if val_byte and self.active_sav_content:
-            for prop in ["FPSLevel", "BattleFPS", "LobbyFPS"]:
+            # All known FPS properties in Active.sav (LobbyFPSLevel controls lobby FPS)
+            for prop in ["FPSLevel", "BattleFPS", "LobbyFPS", "LobbyFPSLevel"]:
                 header = prop.encode('utf-8') + b'\x00\x0c\x00\x00\x00IntProperty\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00'
                 before, sep, after = self.active_sav_content.partition(header)
                 if sep:
